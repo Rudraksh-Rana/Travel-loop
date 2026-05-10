@@ -2,134 +2,320 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { tripsApi } from '@/lib/api';
+import { tripsApi, notesApi } from '@/lib/api';
 import PageWrapper from '@/components/PageWrapper';
+import { 
+  Calendar, MapPin, PlusCircle, ArrowRight, 
+  Map as MapIcon, Compass, Globe, Clock,
+  TrendingUp, Star, Camera, Landmark, 
+  Palmtree, Mountain, Info, LayoutDashboard,
+  Search, ShieldCheck, Sparkles, Users
+} from 'lucide-react';
 import Link from 'next/link';
-import { PlusCircle, MapPin, Calendar, ArrowRight, Clock } from 'lucide-react';
+import AuthGuard from '@/components/AuthGuard';
+import SafeImage from '@/components/SafeImage';
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const [trips, setTrips] = useState<any[]>([]);
+  const [notes, setNotes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    tripsApi.list()
-      .then(setTrips)
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
+    if (!user) return;
+    
+    Promise.all([
+      tripsApi.list(),
+      notesApi.listAll ? notesApi.listAll() : Promise.resolve([]) 
+    ]).then(([tripsData, notesData]) => {
+      setTrips(tripsData);
+      setNotes(notesData || []);
+    })
+    .catch(console.error)
+    .finally(() => setLoading(false));
+  }, [user]);
 
-  const now = new Date();
-  const ongoing = trips.filter(t => new Date(t.startDate) <= now && new Date(t.endDate) >= now);
-  const upcoming = trips.filter(t => new Date(t.startDate) > now);
-  const past = trips.filter(t => new Date(t.endDate) < now);
+  const upcomingTrips = trips.filter(t => new Date(t.startDate) > new Date()).slice(0, 3);
+  const citiesVisited = new Set(trips.flatMap(t => t.stops?.map((s: any) => s.cityName) || [])).size;
+  const loopPoints = trips.length * 150 + notes.length * 50;
+
+  // Dynamic Recommendation Logic
+  let recommendationText = "";
+  if (trips.length === 0) {
+    if (user?.city) {
+      recommendationText = `"As a traveler from ${user.city}, we recommend beginning your chronicle with the royal heritage of Rajasthan or the serene backwaters of Kerala."`;
+    } else {
+      recommendationText = `"Ready for your first expedition? We recommend starting with the majestic forts of Jaipur or the spiritual ghats of Varanasi."`;
+    }
+  } else {
+    // Has previous trips
+    const lastCity = trips[0]?.stops?.[0]?.cityName || 'your last destination';
+    recommendationText = `"Since you recently explored ${lastCity}, we recommend the high-altitude passes of Leh or the vibrant culture of Hampi for your next soul-seeking journey."`;
+  }
 
   return (
-    <PageWrapper>
-      {/* Welcome Hero */}
-      <div className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-primary/10 to-accent-gold/10 p-8 mb-8">
-        <h1 className="font-display text-3xl md:text-4xl text-text mb-2">
-          Where to next, <span className="text-primary">{user?.name?.split(' ')[0]}</span>?
-        </h1>
-        <p className="text-text-muted max-w-md">
-          Plan a new adventure or continue where you left off.
-        </p>
-        <Link
-          href="/trips/new"
-          className="inline-flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-lg font-semibold text-sm
-                     hover:bg-primary-hover transition-all mt-4"
-        >
-          <PlusCircle className="w-4 h-4" />
-          Plan a Trip
-        </Link>
-      </div>
+    <AuthGuard>
+      <PageWrapper>
+        {/* Dynamic Background - Premium Travel Textures */}
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none rounded-tl-[40px]">
+          <div 
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-[0.8] scale-105 animate-slowZoom"
+            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1488646953014-85cb44e25828?q=80&w=2000')" }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-black/95 via-black/40 to-black/90" />
+        </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-        {[
-          { label: 'Total Trips', value: trips.length, color: 'text-primary' },
-          { label: 'Ongoing', value: ongoing.length, color: 'text-green-600' },
-          { label: 'Upcoming', value: upcoming.length, color: 'text-accent-gold' },
-          { label: 'Completed', value: past.length, color: 'text-text-muted' },
-        ].map((stat) => (
-          <div key={stat.label} className="bg-surface rounded-xl border border-divider p-5">
-            <p className="text-text-muted text-xs uppercase tracking-wider mb-1">{stat.label}</p>
-            <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
+        <div className="max-w-[1400px] mx-auto relative z-10 text-white min-h-[calc(100vh-4rem)]">
+          
+          {/* Header Section */}
+          <header className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8 pt-8 animate-fadeIn">
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 text-primary uppercase tracking-[0.4em] text-[10px] font-black">
+                <div className="w-8 h-[2px] bg-primary" />
+                Planning Identity: Active
+              </div>
+              <h1 className="font-display text-7xl md:text-8xl text-white tracking-tighter leading-[0.8]">
+                Namaste, <span className="text-primary italic">{user?.name?.split(' ')[0] || 'Traveler'}</span>
+              </h1>
+              <p className="text-white/40 mt-6 text-xl font-light max-w-xl leading-relaxed italic">
+                Where shall the chronicle lead you next? Your planning deck is ready.
+              </p>
+            </div>
+            
+            <div className="flex gap-4">
+              <Link href="/trips/new" className="bg-terracotta hover:bg-terracotta-hover text-white px-10 py-6 rounded-2xl font-black text-xs uppercase tracking-[0.2em] flex items-center gap-4 shadow-2xl shadow-terracotta/30 transition-all hover:scale-105 active:scale-95 group">
+                <PlusCircle className="w-5 h-5 group-hover:rotate-90 transition-transform duration-500" /> 
+                New Expedition
+              </Link>
+            </div>
+          </header>
+
+          {/* Stats & Quick Pulse */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+            <StatWidget icon={MapIcon} label="Active Plans" value={trips.length} color="text-primary" />
+            <StatWidget icon={Globe} label="Mapped Cities" value={citiesVisited} color="text-orange-500" />
+            <StatWidget icon={TrendingUp} label="Budget Sync" value="92%" color="text-primary" />
+            <StatWidget icon={Camera} label="Archived Stays" value={notes.length} color="text-blue-400" />
           </div>
-        ))}
-      </div>
 
-      {/* Trip Sections */}
-      {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {[1,2,3].map(i => (
-            <div key={i} className="bg-surface rounded-xl border border-divider p-5 h-48 animate-pulse" />
-          ))}
+          {/* Main Planning Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 pb-20">
+            
+            {/* Left Column: Planning Center */}
+            <div className="lg:col-span-8 space-y-16">
+              
+              {/* Featured Planning Card */}
+              <section className="relative rounded-[48px] overflow-hidden group shadow-2xl border border-white/10 p-12 min-h-[500px] flex flex-col justify-end">
+                <SafeImage 
+                  src="https://images.unsplash.com/photo-1599661046289-e31897846e41?q=80&w=1200" 
+                  category="hero"
+                  alt="Jaipur" 
+                  fill
+                  className="object-cover group-hover:scale-110 transition-transform duration-[3000ms]"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+                
+                <div className="relative z-10 space-y-6 max-w-lg">
+                  <div className="flex items-center gap-3">
+                    <span className="bg-primary/90 backdrop-blur-xl text-white text-[10px] font-black px-4 py-2 rounded-full uppercase tracking-widest border border-white/20">
+                      Top Recommendation
+                    </span>
+                    <span className="bg-black/40 backdrop-blur-xl text-white/80 text-[10px] font-bold px-4 py-2 rounded-full uppercase tracking-widest border border-white/10">
+                      7 Day Plan Available
+                    </span>
+                  </div>
+                  <h2 className="font-display text-6xl text-white leading-tight">Jaipur: The <span className="italic text-primary">Royal</span> Blueprint</h2>
+                  <p className="text-white/70 text-lg font-light leading-relaxed">
+                    Our AI has scoured the Pink City for hidden stepwells and boutique havelis. Ready to finalize your route?
+                  </p>
+                  <div className="pt-6 flex items-center gap-6">
+                    <Link href="/trips/new?city=Jaipur" className="bg-white text-black px-10 py-5 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-primary hover:text-white transition-all shadow-xl">
+                      Begin Route Planning
+                    </Link>
+                    <button className="text-white/60 hover:text-white text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all">
+                      View Sample Itinerary <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </section>
+
+              {/* Recent Expeditions (User's actual trips) */}
+              <section>
+                <div className="flex items-center justify-between mb-10">
+                  <h2 className="font-display text-4xl text-white italic">My Expeditions</h2>
+                  <Link href="/trips" className="text-white/40 hover:text-white text-[10px] uppercase tracking-[0.3em] font-black flex items-center gap-3 transition-all group">
+                    View Registry <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
+                  </Link>
+                </div>
+
+                {trips.length === 0 ? (
+                  <div className="bg-white/5 backdrop-blur-3xl border border-dashed border-white/10 rounded-[48px] p-20 text-center group">
+                    <Compass className="w-16 h-16 text-white/10 mx-auto mb-6 group-hover:text-primary transition-all duration-700" />
+                    <p className="text-white/40 text-lg font-light">No expeditions recorded yet.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {trips.slice(0, 2).map((trip) => (
+                      <Link href={`/trips/${trip._id}`} key={trip._id} className="group relative h-[350px] rounded-[40px] overflow-hidden border border-white/10 hover:border-primary/40 transition-all shadow-2xl">
+                        <SafeImage 
+                          src={trip.coverPhotoUrl || 'https://images.unsplash.com/photo-1524492459416-81446b1f315e?q=80&w=800'} 
+                          category="hero"
+                          alt="" 
+                          fill
+                          className="object-cover group-hover:scale-110 transition-transform duration-[2000ms]" 
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+                        <div className="absolute bottom-8 left-8 right-8">
+                          <div className="flex items-center gap-2 mb-3">
+                            <span className="text-[9px] font-black uppercase tracking-widest text-white/60 bg-primary/20 backdrop-blur-md px-3 py-1 rounded-full border border-primary/20">
+                              {trip.stops?.length || 0} Stops
+                            </span>
+                          </div>
+                          <h3 className="font-display text-2xl text-white group-hover:text-primary transition-colors mb-4 line-clamp-1 italic">{trip.title}</h3>
+                          <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-white/40">
+                            <Calendar className="w-3 h-3 text-primary" />
+                            {new Date(trip.startDate).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </section>
+
+              {/* Suggested Destinations */}
+              <section>
+                <div className="flex items-center justify-between mb-10">
+                  <h2 className="font-display text-4xl text-white italic">Suggested Destinations</h2>
+                  <Link href="/search" className="text-white/40 hover:text-white text-[10px] uppercase tracking-[0.3em] font-black flex items-center gap-3 transition-all group">
+                    Explore Global Map <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
+                  </Link>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <SampleCityCard 
+                    title="Varanasi: Ghats & Silk" 
+                    img="https://images.unsplash.com/photo-1561359313-0639aad49ca6?q=80&w=800"
+                    tags={['Heritage', 'Spirituality']}
+                  />
+                  <SampleCityCard 
+                    title="Munnar: Tea Sanctuaries" 
+                    img="https://images.unsplash.com/photo-1593181629936-11c609b8db9b?q=80&w=800"
+                    tags={['Wellness', 'Nature']}
+                  />
+                </div>
+              </section>
+            </div>
+
+            {/* Right Column: Planning Insights */}
+            <div className="lg:col-span-4 space-y-10">
+              
+              {/* Route Pulse Widget */}
+              <div className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[40px] p-10 relative overflow-hidden group shadow-2xl">
+                <div className="absolute -right-10 -top-10 w-40 h-40 bg-primary/20 blur-[100px] group-hover:bg-primary/30 transition-all duration-1000" />
+                <Landmark className="absolute -right-6 -top-6 w-32 h-32 text-white/5 group-hover:rotate-12 group-hover:scale-110 transition-all duration-1000" />
+                
+                <h3 className="font-display text-3xl text-white mb-10 relative z-10 italic">Planning Insights</h3>
+                
+                <div className="space-y-10 relative z-10">
+                  <CoverageItem label="Route Efficiency" percentage={88} color="bg-primary" />
+                  <CoverageItem label="Logistics Sync" percentage={65} color="bg-blue-500" />
+                  <CoverageItem label="Experience Density" percentage={92} color="bg-terracotta" />
+                </div>
+
+                <div className="mt-12 p-6 bg-white/5 backdrop-blur-2xl rounded-3xl border border-white/10 relative z-10 hover:bg-white/10 transition-colors">
+                  <div className="flex gap-5 items-start">
+                    <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center shrink-0 border border-primary/30 shadow-lg">
+                      <Sparkles className="w-5 h-5 text-primary" />
+                    </div>
+                    <p className="text-xs text-white/70 leading-relaxed italic font-light">
+                      Your current route through Rajasthan has a high "Heritage Density". We suggest adding a 2-day stop in Udaipur for optimal pacing.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Planning Quick Actions */}
+              <div className="bg-terracotta/90 backdrop-blur-3xl rounded-[40px] p-10 text-white relative overflow-hidden group border border-white/10 shadow-2xl shadow-terracotta/20">
+                <Star className="absolute -right-6 -top-6 w-32 h-32 text-white/10 group-hover:scale-125 transition-transform duration-1000" />
+                <p className="text-[10px] uppercase font-black tracking-[0.3em] text-white/50 mb-3 relative z-10">Expedition Toolkit</p>
+                <h4 className="font-display text-4xl mb-8 relative z-10 leading-tight">Elite Planning Console</h4>
+                
+                <div className="grid grid-cols-2 gap-4 relative z-10">
+                  <QuickAction label="Book Hotel" icon={Star} />
+                  <QuickAction label="Hire Guide" icon={Users} />
+                  <QuickAction label="Add Activity" icon={PlusCircle} />
+                  <QuickAction label="Track Spend" icon={TrendingUp} />
+                </div>
+              </div>
+
+            </div>
+          </div>
         </div>
-      ) : trips.length === 0 ? (
-        <div className="text-center py-20">
-          <div className="text-5xl mb-4">🗺️</div>
-          <h3 className="font-display text-2xl text-text mb-2">No trips yet</h3>
-          <p className="text-text-muted mb-6">Create your first adventure to get started</p>
-          <Link
-            href="/trips/new"
-            className="inline-flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-lg font-semibold text-sm hover:bg-primary-hover transition-all"
-          >
-            <PlusCircle className="w-4 h-4" />
-            Create Trip
-          </Link>
-        </div>
-      ) : (
-        <>
-          {ongoing.length > 0 && <TripSection title="🟢 Ongoing Trips" trips={ongoing} />}
-          {upcoming.length > 0 && <TripSection title="🔜 Upcoming Trips" trips={upcoming} />}
-          {past.length > 0 && <TripSection title="✅ Previous Trips" trips={past} />}
-        </>
-      )}
-    </PageWrapper>
+      </PageWrapper>
+    </AuthGuard>
   );
 }
 
-function TripSection({ title, trips }: { title: string; trips: any[] }) {
+function SampleCityCard({ title, img, tags }: any) {
   return (
-    <div className="mb-10">
-      <h2 className="font-display text-xl text-text mb-4">{title}</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {trips.map((trip) => (
-          <Link
-            key={trip._id}
-            href={`/trips/${trip._id}`}
-            className="group bg-surface rounded-xl border border-divider overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all"
-          >
-            {/* Cover image */}
-            <div className="h-36 bg-surface-2 relative overflow-hidden">
-              {trip.coverPhotoUrl ? (
-                <img src={trip.coverPhotoUrl} alt={trip.title} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-4xl opacity-40">🏔️</div>
-              )}
-            </div>
-            <div className="p-5">
-              <h3 className="font-display text-lg text-text mb-2 group-hover:text-primary transition-colors">
-                {trip.title}
-              </h3>
-              <div className="flex items-center gap-4 text-xs text-text-muted">
-                <span className="flex items-center gap-1">
-                  <Calendar className="w-3 h-3" />
-                  {new Date(trip.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-                  {' – '}
-                  {new Date(trip.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                </span>
-              </div>
-              {trip.description && (
-                <p className="text-text-muted text-sm mt-2 line-clamp-2">{trip.description}</p>
-              )}
-              <div className="flex items-center gap-1 text-primary text-xs font-medium mt-3 group-hover:gap-2 transition-all">
-                View Details <ArrowRight className="w-3 h-3" />
-              </div>
-            </div>
-          </Link>
-        ))}
+    <div className="group relative h-[350px] rounded-[40px] overflow-hidden border border-white/10 hover:border-primary/40 transition-all shadow-2xl">
+      <SafeImage src={img} category="city" alt="" fill className="object-cover group-hover:scale-110 transition-transform duration-[2000ms]" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+      <div className="absolute bottom-8 left-8 right-8">
+        <div className="flex gap-2 mb-3">
+          {tags.map((tag: string) => (
+            <span key={tag} className="text-[9px] font-black uppercase tracking-widest text-white/60 bg-white/5 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
+              {tag}
+            </span>
+          ))}
+        </div>
+        <h3 className="font-display text-2xl text-white group-hover:text-primary transition-colors mb-4">{title}</h3>
+        <button className="text-white/40 group-hover:text-white text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all">
+          Build Route <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function QuickAction({ label, icon: Icon }: any) {
+  return (
+    <button className="flex flex-col items-center justify-center gap-3 p-6 bg-white/5 hover:bg-white/10 rounded-3xl border border-white/10 transition-all hover:scale-105 active:scale-95 group">
+      <div className="p-3 bg-white/5 rounded-xl border border-white/10 group-hover:bg-primary group-hover:border-primary transition-all shadow-lg">
+        <Icon className="w-5 h-5 text-white/60 group-hover:text-white" />
+      </div>
+      <span className="text-[10px] font-black uppercase tracking-widest text-white/40 group-hover:text-white">{label}</span>
+    </button>
+  );
+}
+
+function StatWidget({ icon: Icon, label, value, color }: any) {
+  return (
+    <div className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[32px] p-8 flex items-center gap-6 hover:bg-white/10 transition-all group shadow-2xl">
+      <div className={`w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center ${color} shadow-inner border border-white/10 group-hover:scale-110 transition-transform duration-500`}>
+        <Icon className="w-8 h-8" />
+      </div>
+      <div>
+        <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em] mb-2">{label}</p>
+        <p className="text-4xl font-display text-white tracking-tighter">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+function CoverageItem({ label, percentage, color }: any) {
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-[0.3em]">
+        <span className="text-white/40">{label}</span>
+        <span className="text-white">{percentage}%</span>
+      </div>
+      <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+        <div 
+          className={`h-full ${color} transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(var(--color-primary-rgb),0.5)]`} 
+          style={{ width: `${percentage}%` }}
+        />
       </div>
     </div>
   );

@@ -7,7 +7,7 @@ import PageWrapper from '@/components/PageWrapper';
 import { 
   Calendar, MapPin, PlusCircle, Trash2, 
   ArrowLeft, Clock, GripVertical, Info, 
-  Clock3, Trash
+  Clock3, Trash, Sparkles, Navigation, Share2
 } from 'lucide-react';
 import Link from 'next/link';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
@@ -31,7 +31,9 @@ export default function ItineraryPage() {
 
   async function handleAddActivity(e: React.FormEvent) {
     e.preventDefault();
-    if (!data) return;
+    if (!data || !newActivity.title.trim()) {
+      return;
+    }
     const stop = data.stops[activeStopIndex];
     const activity = await activitiesApi.create(stop._id, {
       ...newActivity,
@@ -62,12 +64,10 @@ export default function ItineraryPage() {
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
 
-    // Update local state immediately
     const updatedStops = [...data.stops];
     updatedStops[activeStopIndex].activities = items;
     setData({ ...data, stops: updatedStops });
 
-    // Sync with backend
     const reorderPayload = items.map((item: any, index: number) => ({
       id: item._id,
       orderIndex: index
@@ -75,151 +75,225 @@ export default function ItineraryPage() {
     await activitiesApi.reorder(reorderPayload);
   };
 
-  if (loading) return <PageWrapper><div className="animate-pulse space-y-4"><div className="h-12 bg-surface rounded-xl w-64" /><div className="h-64 bg-surface rounded-3xl" /></div></PageWrapper>;
-  if (!data) return <PageWrapper><div>Not found</div></PageWrapper>;
+  if (loading) return (
+    <PageWrapper>
+      <div className="absolute inset-0 bg-black/90 pointer-events-none" />
+      <div className="animate-pulse space-y-12 max-w-[1200px] mx-auto pt-20">
+        <div className="h-20 bg-white/5 rounded-[40px] w-full" />
+        <div className="h-[500px] bg-white/5 rounded-[48px] w-full" />
+      </div>
+    </PageWrapper>
+  );
+
+  if (!data) return <PageWrapper><div className="text-white text-center py-20 font-display text-4xl">Chronicle Entry Not Found</div></PageWrapper>;
 
   const currentStop = data.stops[activeStopIndex];
 
   return (
     <PageWrapper>
-      <div className="max-w-[1000px] mx-auto">
-        <Link href={`/trips/${id}`} className="flex items-center gap-1 text-sm text-text-muted hover:text-primary transition-colors mb-6">
-          <ArrowLeft className="w-4 h-4" /> Back to Overview
-        </Link>
+      {/* Cinematic Background */}
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none rounded-tl-[40px]">
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-[0.85] scale-105"
+          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1590050752117-238cb0fb12b1?q=80&w=2000')" }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-black/95 via-black/40 to-black/90" />
+      </div>
 
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="font-display text-4xl text-text mb-2">Detailed Itinerary</h1>
-            <p className="text-text-muted text-sm flex items-center gap-2">
-              <MapPin className="w-4 h-4" /> {data.trip.title} • {data.stops.length} Days
+      <div className="max-w-[1200px] mx-auto relative z-10 text-white min-h-[calc(100vh-4rem)] pt-8 pb-20 animate-fadeIn">
+        
+        {/* Navigation & Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-10 mb-16">
+          <div className="space-y-4">
+            <Link href={`/trips/${id}`} className="inline-flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] text-white/30 hover:text-primary transition-all group mb-4">
+              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-2 transition-transform" /> Back to Chronicle
+            </Link>
+            <div className="flex items-center gap-3 text-primary uppercase tracking-[0.4em] text-[10px] font-black">
+              <div className="w-8 h-[2px] bg-primary" />
+              Itinerary Engine
+            </div>
+            <h1 className="font-display text-7xl md:text-8xl text-white tracking-tighter leading-[0.8]">
+              Daily <span className="text-primary italic">Circuit</span>
+            </h1>
+            <p className="text-white/40 mt-6 text-xl font-light italic flex items-center gap-3">
+              <Navigation className="w-5 h-5 text-terracotta" /> {data.trip.title} • {data.stops.length} Mapped Destinations
             </p>
+          </div>
+
+          <div className="flex gap-4">
+            <button 
+              onClick={() => window.print()}
+              className="bg-white/5 hover:bg-white/10 text-white px-8 py-6 rounded-2xl font-black text-xs uppercase tracking-[0.2em] flex items-center gap-4 border border-white/10 transition-all hover:scale-105 active:scale-95 group"
+            >
+              <Share2 className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" /> 
+              Export Manifest
+            </button>
+            <button 
+              onClick={() => setShowAddActivity(!showAddActivity)}
+              className="bg-terracotta hover:bg-terracotta-hover text-white px-10 py-6 rounded-2xl font-black text-xs uppercase tracking-[0.2em] flex items-center gap-4 shadow-2xl shadow-terracotta/30 transition-all hover:scale-105 active:scale-95 group"
+            >
+              <PlusCircle className="w-5 h-5 group-hover:rotate-90 transition-transform duration-500" /> 
+              Inject Activity
+            </button>
           </div>
         </div>
 
-        {/* Day Selector */}
-        <div className="flex gap-2 overflow-x-auto pb-4 mb-8 no-scrollbar">
+        {/* Destination Selector Tabs */}
+        <div className="flex gap-4 overflow-x-auto pb-10 mb-10 no-scrollbar">
           {data.stops.map((stop, idx) => (
             <button
               key={stop._id}
               onClick={() => setActiveStopIndex(idx)}
-              className={`px-6 py-3 rounded-2xl text-sm font-bold transition-all whitespace-nowrap
+              className={`px-8 py-5 rounded-[24px] text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap border
                 ${activeStopIndex === idx 
-                  ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-105' 
-                  : 'bg-surface border border-divider text-text-muted hover:border-primary/30'}`}
+                  ? 'bg-primary border-primary text-white shadow-2xl shadow-primary/30 scale-105 z-10' 
+                  : 'bg-white/5 border-white/10 text-white/30 hover:border-white/30'}`}
             >
               Day {idx + 1}: {stop.cityName}
             </button>
           ))}
         </div>
 
-        {currentStop ? (
-          <div className="animate-fadeIn">
-            <div className="bg-surface rounded-3xl border border-divider p-8 mb-8 relative overflow-hidden">
-              <div className="flex items-center justify-between mb-8 relative z-10">
-                <div>
-                  <h2 className="font-display text-3xl text-text mb-1">{currentStop.cityName}</h2>
-                  <p className="text-xs font-bold text-primary uppercase tracking-widest">
-                    {new Date(currentStop.arrivalDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long' })}
-                  </p>
-                </div>
-                <button 
-                  onClick={() => setShowAddActivity(true)}
-                  className="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-primary/20 hover:bg-primary-hover transition-all"
-                >
-                  <PlusCircle className="w-4 h-4" /> Add Activity
-                </button>
-              </div>
-
-              {showAddActivity && (
-                <form onSubmit={handleAddActivity} className="bg-white rounded-2xl border border-primary/20 p-6 mb-8 shadow-lg animate-fadeIn">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <input type="text" placeholder="Activity title (e.g. Visit Amber Fort)" value={newActivity.title}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
+          
+          {/* Main List */}
+          <div className="lg:col-span-2 space-y-8">
+            {showAddActivity && (
+              <form onSubmit={handleAddActivity} className="bg-white/5 backdrop-blur-3xl border border-primary/30 rounded-[40px] p-10 shadow-2xl animate-fadeIn relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 blur-[100px] -mr-32 -mt-32" />
+                <h2 className="font-display text-3xl text-white mb-8 italic relative z-10">Activity Parameters</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10 relative z-10">
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-2">Description</label>
+                    <input type="text" placeholder="e.g. Heritage walk through Hampi" value={newActivity.title}
                       onChange={(e) => setNewActivity(p => ({ ...p, title: e.target.value }))}
-                      className="px-4 py-3 bg-surface-2 border border-divider rounded-xl text-sm" />
+                      className="w-full px-6 py-5 bg-white/5 border border-white/10 rounded-2xl text-white focus:border-primary/50 outline-none transition-all text-sm font-medium" />
+                  </div>
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-2">Category</label>
                     <select value={newActivity.type} onChange={(e) => setNewActivity(p => ({ ...p, type: e.target.value }))}
-                      className="px-4 py-3 bg-surface-2 border border-divider rounded-xl text-sm">
-                      <option>Sightseeing</option>
-                      <option>Transport</option>
-                      <option>Dining</option>
-                      <option>Adventure</option>
-                      <option>Rest</option>
+                      className="w-full px-6 py-5 bg-white/5 border border-white/10 rounded-2xl text-white focus:border-primary/50 outline-none transition-all text-sm font-medium appearance-none">
+                      <option className="bg-neutral-900">Sightseeing</option>
+                      <option className="bg-neutral-900">Transport</option>
+                      <option className="bg-neutral-900">Dining</option>
+                      <option className="bg-neutral-900">Adventure</option>
+                      <option className="bg-neutral-900">Rest</option>
                     </select>
+                  </div>
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-2">Duration <span className="text-white/10">(Mins)</span></label>
                     <input type="number" placeholder="Duration (mins)" value={newActivity.duration}
                       onChange={(e) => setNewActivity(p => ({ ...p, duration: e.target.value }))}
-                      className="px-4 py-3 bg-surface-2 border border-divider rounded-xl text-sm" />
+                      className="w-full px-6 py-5 bg-white/5 border border-white/10 rounded-2xl text-white focus:border-primary/50 outline-none transition-all text-sm font-medium" />
+                  </div>
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-2">Expedition Cost <span className="text-white/10">(₹)</span></label>
                     <input type="number" placeholder="Est. Cost (₹)" value={newActivity.cost}
                       onChange={(e) => setNewActivity(p => ({ ...p, cost: e.target.value }))}
-                      className="px-4 py-3 bg-surface-2 border border-divider rounded-xl text-sm" />
+                      className="w-full px-6 py-5 bg-white/5 border border-white/10 rounded-2xl text-white focus:border-primary/50 outline-none transition-all text-sm font-medium" />
                   </div>
-                  <div className="flex gap-2">
-                    <button type="submit" className="bg-primary text-white px-6 py-2 rounded-xl text-sm font-bold">Save Activity</button>
-                    <button type="button" onClick={() => setShowAddActivity(false)} className="px-6 py-2 text-sm text-text-muted">Cancel</button>
-                  </div>
-                </form>
-              )}
+                </div>
+                <div className="flex gap-6 relative z-10">
+                  <button type="submit" className="bg-primary text-white px-10 py-5 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-2xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all">Save Activity</button>
+                  <button type="button" onClick={() => setShowAddActivity(false)} className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-white">Cancel</button>
+                </div>
+              </form>
+            )}
 
-              {/* Drag and Drop Activities */}
-              <DragDropContext onDragEnd={onDragEnd}>
-                <Droppable droppableId="activities">
-                  {(provided) => (
-                    <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4">
-                      {currentStop.activities?.length === 0 ? (
-                        <div className="text-center py-12 bg-white/50 rounded-2xl border border-dashed border-divider">
-                          <Info className="w-8 h-8 text-divider mx-auto mb-2" />
-                          <p className="text-text-muted text-sm">No activities planned for this day.</p>
-                        </div>
-                      ) : (
-                        currentStop.activities?.map((activity: any, index: number) => (
-                          <Draggable key={activity._id} draggableId={activity._id} index={index}>
-                            {(provided, snapshot) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                className={`flex items-center gap-4 p-5 bg-white rounded-2xl border transition-all
-                                  ${snapshot.isDragging ? 'shadow-2xl border-primary/40 rotate-1' : 'border-divider hover:border-primary/20'}`}
-                              >
-                                <div {...provided.dragHandleProps} className="text-text-faint hover:text-primary transition-colors cursor-grab active:cursor-grabbing">
-                                  <GripVertical className="w-5 h-5" />
-                                </div>
-                                <div className="w-12 h-12 rounded-xl bg-surface-2 flex items-center justify-center text-2xl shrink-0">
-                                  {getActivityIcon(activity.type)}
-                                </div>
-                                <div className="flex-1">
-                                  <h4 className="font-bold text-text mb-0.5">{activity.title}</h4>
-                                  <div className="flex items-center gap-3 text-xs text-text-muted">
-                                    <span className="flex items-center gap-1 uppercase tracking-wider font-bold text-[10px]"><Clock3 className="w-3 h-3" /> {activity.duration}m</span>
-                                    <span className="w-1 h-1 bg-divider rounded-full" />
-                                    <span className="uppercase tracking-wider font-bold text-[10px] text-primary">{activity.type}</span>
-                                  </div>
-                                </div>
-                                <div className="text-right mr-4">
-                                  <p className="text-sm font-bold text-text">₹{activity.cost}</p>
-                                </div>
-                                <button 
-                                  onClick={() => handleDeleteActivity(activity._id)}
-                                  className="p-2 text-text-faint hover:text-red-500 transition-colors"
-                                >
-                                  <Trash className="w-4 h-4" />
-                                </button>
+            <DragDropContext onDragEnd={onDragEnd}>
+              <Droppable droppableId="activities">
+                {(provided) => (
+                  <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-6">
+                    {!currentStop || currentStop.activities?.length === 0 ? (
+                      <div className="text-center py-40 bg-white/5 backdrop-blur-3xl rounded-[48px] border border-dashed border-white/10 group">
+                        <Sparkles className="w-20 h-20 text-white/10 mx-auto mb-8 group-hover:text-primary transition-all duration-1000" />
+                        <h3 className="font-display text-4xl text-white mb-4 italic">Uncharted Territory</h3>
+                        <p className="text-white/40 text-lg font-light">Add activities to map this destination's soul.</p>
+                      </div>
+                    ) : (
+                      currentStop.activities?.map((activity: any, index: number) => (
+                        <Draggable key={activity._id} draggableId={activity._id} index={index}>
+                          {(provided, snapshot) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              className={`flex items-center gap-8 p-8 bg-white/5 backdrop-blur-3xl rounded-[32px] border transition-all group
+                                ${snapshot.isDragging ? 'shadow-2xl border-primary/60 rotate-1 z-50 bg-white/10' : 'border-white/10 hover:border-primary/40 hover:bg-white/10'}`}
+                            >
+                              <div {...provided.dragHandleProps} className="text-white/10 group-hover:text-primary transition-colors cursor-grab active:cursor-grabbing">
+                                <GripVertical className="w-6 h-6" />
                               </div>
-                            )}
-                          </Draggable>
-                        ))
-                      )}
-                      {provided.placeholder}
-                    </div>
-                  )}
-                </Droppable>
-              </DragDropContext>
+                              
+                              <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-3xl shrink-0 shadow-xl group-hover:scale-110 transition-all">
+                                {getActivityIcon(activity.type)}
+                              </div>
+                              
+                              <div className="flex-1">
+                                <h4 className="font-display text-2xl text-white mb-2 italic group-hover:text-primary transition-colors">{activity.title}</h4>
+                                <div className="flex items-center gap-6 text-[10px] font-black uppercase tracking-widest text-white/30">
+                                  <span className="flex items-center gap-2"><Clock3 className="w-4 h-4 text-primary" /> {activity.duration}m</span>
+                                  <span className="w-1.5 h-1.5 bg-white/10 rounded-full" />
+                                  <span className="text-terracotta">{activity.type}</span>
+                                </div>
+                              </div>
+                              
+                              <div className="text-right">
+                                <p className="font-display text-2xl text-white leading-none mb-1">₹{activity.cost}</p>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-white/20">Projected</p>
+                              </div>
+                              
+                              <button 
+                                onClick={() => handleDeleteActivity(activity._id)}
+                                className="p-4 bg-white/5 rounded-2xl border border-white/10 text-white/20 hover:text-red-500 hover:bg-red-500/10 transition-all"
+                              >
+                                <Trash className="w-5 h-5" />
+                              </button>
+                            </div>
+                          )}
+                        </Draggable>
+                      ))
+                    )}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </DragDropContext>
+          </div>
+
+          {/* Logistics Sidebar */}
+          <div className="space-y-8 animate-fadeInSlideUp">
+            <div className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[40px] p-10 shadow-2xl">
+              <h3 className="font-display text-3xl text-white mb-8 italic">Day Summary</h3>
+              <div className="space-y-6">
+                <SummaryItem icon={Clock} label="Total Duration" value={`${currentStop?.activities?.reduce((acc: number, a: any) => acc + a.duration, 0) || 0} mins`} />
+                <SummaryItem icon={Sparkles} label="Budget Impact" value={`₹${currentStop?.activities?.reduce((acc: number, a: any) => acc + a.cost, 0) || 0}`} color="text-primary" />
+                <SummaryItem icon={MapPin} label="Destination" value={currentStop?.cityName} />
+              </div>
+            </div>
+            
+            <div className="bg-terracotta rounded-[40px] p-10 shadow-2xl shadow-terracotta/20 relative overflow-hidden group">
+              <Info className="absolute -right-4 -bottom-4 w-32 h-32 text-white/10 group-hover:rotate-12 transition-transform duration-700" />
+              <div className="relative z-10 space-y-4">
+                <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">Logistics Pro-Tip</h4>
+                <p className="text-white font-light leading-relaxed italic">"Optimal heritage routes in {currentStop?.cityName} are best explored between 07:00 and 11:00 to avoid high-intensity thermal cycles."</p>
+              </div>
             </div>
           </div>
-        ) : (
-          <div className="text-center py-20 bg-surface rounded-3xl border border-divider">
-            <p className="text-text-muted italic">Add stops to your trip to start planning daily activities.</p>
-          </div>
-        )}
+        </div>
       </div>
     </PageWrapper>
+  );
+}
+
+function SummaryItem({ icon: Icon, label, value, color = "text-white" }: any) {
+  return (
+    <div className="flex items-center justify-between py-4 border-b border-white/10 last:border-0">
+      <div className="flex items-center gap-3">
+        <Icon className="w-4 h-4 text-white/30" />
+        <span className="text-[10px] font-black uppercase tracking-widest text-white/40">{label}</span>
+      </div>
+      <span className={`text-sm font-bold ${color}`}>{value}</span>
+    </div>
   );
 }
 

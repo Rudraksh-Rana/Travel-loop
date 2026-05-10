@@ -1,132 +1,133 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { MapPin, ArrowRight, Lock, Mail, Sparkles, Landmark } from 'lucide-react';
 
 export default function LoginPage() {
   const { login, isAuthenticated } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  // Redirect if already logged in
-  if (isAuthenticated) {
-    router.push('/dashboard');
-    return null;
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError('');
-
-    if (!email || !password) {
-      setError('Please fill in all fields');
-      return;
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/dashboard');
     }
+  }, [isAuthenticated, router]);
 
+  if (isAuthenticated) return null;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
+    setError('');
     try {
       await login(email, password);
       router.push('/dashboard');
     } catch (err: any) {
-      setError(err.message || 'Login failed');
+      setError(err.message || 'Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
-    <div className="min-h-screen bg-bg flex items-center justify-center px-4">
-      <div className="w-full max-w-[420px] animate-fadeIn">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <span className="text-primary text-2xl">✈</span>
-            <h1 className="font-display text-3xl text-text">Traveloop</h1>
-          </div>
-          <p className="text-text-muted text-sm italic">Plan. Explore. Loop.</p>
-        </div>
+    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-[#0D0C0B]">
+      {/* Cinematic Background Overlay */}
+      <div 
+        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-[0.55] scale-105"
+        style={{ backgroundImage: "url('https://images.unsplash.com/photo-1599661046289-e31897846e41?q=80&w=2000')" }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0D0C0B] via-transparent to-black/30" />
+      </div>
 
-        {/* Card */}
-        <div className="bg-surface rounded-2xl border border-divider p-8 shadow-md">
-          <h2 className="font-display text-2xl text-text mb-1">Welcome back</h2>
-          <p className="text-text-muted text-sm mb-6">Sign in to continue planning</p>
+      {/* Auth Card */}
+      <div className="relative z-10 w-full max-w-[500px] px-6">
+        <div className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[40px] p-12 shadow-2xl shadow-black/80">
+          
+          {/* Logo & Header */}
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-3 text-primary uppercase tracking-[0.4em] text-[10px] font-black mb-6">
+              <Landmark className="w-4 h-4" />
+              Heritage Chronicle
+            </div>
+            <Link href="/">
+              <h1 className="font-display text-5xl text-white tracking-tighter mb-4">
+                Travel<span className="text-primary italic">oop</span>
+              </h1>
+            </Link>
+            <p className="text-white/40 text-lg font-light italic leading-relaxed">Step into the Indian story.</p>
+          </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3 mb-4">
+            <div className="mb-8 p-5 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-xs text-center">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-text mb-1.5">Email</label>
+          <form onSubmit={handleSubmit} className="space-y-8">
+            <div className="space-y-3">
+              <label className="text-[10px] uppercase tracking-[0.3em] font-black text-white/30 ml-4">Email Identity</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-faint" />
-                <input
-                  type="email"
+                <Mail className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
+                <input 
+                  type="email" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  className="w-full pl-10 pr-4 py-2.5 bg-surface-2 border border-divider rounded-lg text-text
-                             placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary
-                             transition-all text-sm"
+                  className="w-full bg-white/5 border border-white/10 rounded-[20px] py-5 pl-14 pr-6 text-white outline-none focus:border-primary/50 focus:bg-white/10 transition-all text-sm font-medium"
+                  placeholder="explorer@traveloop.com"
+                  required
                 />
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-text mb-1.5">Password</label>
+            <div className="space-y-3">
+              <label className="text-[10px] uppercase tracking-[0.3em] font-black text-white/30 ml-4">Secret Code</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-faint" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
+                <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
+                <input 
+                  type="password" 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-[20px] py-5 pl-14 pr-6 text-white outline-none focus:border-primary/50 focus:bg-white/10 transition-all text-sm font-medium"
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-10 py-2.5 bg-surface-2 border border-divider rounded-lg text-text
-                             placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary
-                             transition-all text-sm"
+                  required
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-faint hover:text-text transition-colors"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
               </div>
             </div>
 
-            <div className="text-right">
-              <a href="#" className="text-xs text-text-muted hover:text-primary transition-colors">
-                Forgot password?
-              </a>
-            </div>
-
-            <button
-              type="submit"
+            <button 
+              type="submit" 
               disabled={loading}
-              className="w-full bg-primary text-white py-3 rounded-lg font-semibold text-sm hover:bg-primary-hover
-                         transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full bg-terracotta hover:bg-terracotta-hover text-white py-6 rounded-[24px] font-black text-xs uppercase tracking-[0.2em] transition-all shadow-2xl shadow-terracotta/20 flex items-center justify-center gap-4 group mt-12 active:scale-95"
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? (
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <>
+                  Enter the Expedition <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
+                </>
+              )}
             </button>
           </form>
+
+          <div className="mt-12 text-center text-white/30 text-[11px] font-bold uppercase tracking-widest">
+            New Explorer?{' '}
+            <Link href="/register" className="text-white hover:text-primary transition-colors underline underline-offset-8 decoration-primary/50">
+              Create an Identity
+            </Link>
+          </div>
         </div>
 
-        <p className="text-center text-sm text-text-muted mt-6">
-          Don't have an account?{' '}
-          <Link href="/register" className="text-primary font-medium hover:underline">
-            Sign Up
-          </Link>
-        </p>
+        {/* Footer Note */}
+        <div className="mt-12 text-center">
+          <p className="text-[10px] text-white/10 uppercase tracking-[0.6em] font-black italic">Modern Heritage · India</p>
+        </div>
       </div>
     </div>
   );

@@ -19,6 +19,9 @@ router.get('/:stopId/activities', authMiddleware, async (req, res) => {
 router.post('/:stopId/activities', authMiddleware, async (req, res) => {
   try {
     const count = await Activity.countDocuments({ stopId: req.params.stopId });
+    if (!req.body.title) {
+      return res.status(400).json({ error: 'Activity title is required' });
+    }
     const activity = new Activity({ 
       ...req.body, 
       stopId: req.params.stopId,

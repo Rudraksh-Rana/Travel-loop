@@ -2,29 +2,46 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Calendar, Users, ArrowRight, Star, ChevronDown, ChevronRight, Menu, X } from 'lucide-react';
+import { 
+  MapPin, Calendar, Users, ArrowRight, Star, 
+  ChevronDown, ChevronRight, Menu, X, Search,
+  Compass, Globe, Heart, Bell
+} from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import SafeImage from '@/components/SafeImage';
 
 const heroImages = [
-  'https://picsum.photos/seed/himalaya/1920/1080',
-  'https://picsum.photos/seed/backwaters/1920/1080',
-  'https://picsum.photos/seed/varanasi/1920/1080',
+  'https://images.unsplash.com/photo-1524492459416-81446b1f315e?q=80&w=2000', // Taj Mahal
+  'https://images.unsplash.com/photo-1548013146-72479768bbaa?q=80&w=2000', // Varanasi
+  'https://images.unsplash.com/photo-1593693397690-362ae9666ec2?q=80&w=2000', // Jaipur
 ];
 
-const trendingDestinations = [
-  { name: 'Rajasthan', rating: 4.8, days: '7 Days', price: '₹24,999', img: 'https://picsum.photos/seed/rajasthan-fort/400/530' },
-  { name: 'Spiti Valley', rating: 4.9, days: '8 Days', price: '₹28,500', img: 'https://picsum.photos/seed/himachal-mountains/400/530' },
-  { name: 'Andaman', rating: 4.7, days: '5 Days', price: '₹32,000', img: 'https://picsum.photos/seed/tropical-beach/400/530' },
-  { name: 'Hampi', rating: 4.8, days: '4 Days', price: '₹14,500', img: 'https://picsum.photos/seed/ancient-ruins/400/530' },
-];
-
-const categories = [
-  { name: 'Mountains', icon: '🏔', img: 'https://picsum.photos/seed/mountains-india/300/400' },
-  { name: 'Beaches', icon: '🌊', img: 'https://picsum.photos/seed/beach-india/300/400' },
-  { name: 'Heritage', icon: '🏛', img: 'https://picsum.photos/seed/heritage-monument/300/400' },
-  { name: 'Wildlife', icon: '🐅', img: 'https://picsum.photos/seed/wildlife-tiger/300/400' },
-  { name: 'Spiritual', icon: '🪷', img: 'https://picsum.photos/seed/temple-spiritual/300/400' },
+const expeditions = [
+  { 
+    title: 'Tiger Kingdom Expedition', 
+    duration: '8 Days', 
+    price: '₹1,24,000', 
+    category: 'Wildlife',
+    tags: ['Wildlife', 'Luxury Safari'],
+    img: 'https://images.unsplash.com/photo-1508189860359-750dc04f5c2f?q=80&w=800' 
+  },
+  { 
+    title: 'Coastal Bliss & Yoga', 
+    duration: '6 Days', 
+    price: '₹86,500', 
+    category: 'Wellness',
+    tags: ['Wellness', 'Coastal'],
+    img: 'https://images.unsplash.com/photo-1512100356956-c1227c3317bb?q=80&w=800' 
+  },
+  { 
+    title: 'Ladakh: Sky Road Journey', 
+    duration: '10 Days', 
+    price: '₹1,45,000', 
+    category: 'Adventure',
+    tags: ['Adventure', 'Mountain'],
+    img: 'https://images.unsplash.com/photo-1581791538302-03537b9c97bf?q=80&w=800' 
+  },
 ];
 
 export default function Home() {
@@ -38,10 +55,9 @@ export default function Home() {
     };
     window.addEventListener('scroll', handleScroll);
     
-    // Crossfade loop
     const interval = setInterval(() => {
       setCurrentImage((prev) => (prev + 1) % heroImages.length);
-    }, 6000);
+    }, 7000);
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
@@ -50,34 +66,321 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-bg text-text">
-      {/* Navbar */}
-      <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-bg/90 backdrop-blur-md py-4 border-b border-divider' : 'bg-transparent py-6'}`}>
-        <div className="max-w-[1280px] mx-auto px-6 flex justify-between items-center">
-          <Link href="/" className={`font-display text-2xl tracking-wide ${scrolled ? 'text-text' : 'text-white'}`}>
-            Trip-Smart
+    <div className="min-h-screen bg-bg text-text selection:bg-primary selection:text-white">
+      {/* Premium Navbar */}
+      <nav className={`fixed top-0 w-full z-50 transition-all duration-500 ${scrolled ? 'bg-white/80 backdrop-blur-xl py-4 border-b border-divider shadow-sm' : 'bg-transparent py-8'}`}>
+        <div className="max-w-[1400px] mx-auto px-8 flex justify-between items-center">
+          <Link href="/" className={`font-display text-2xl tracking-tighter transition-colors ${scrolled ? 'text-text' : 'text-white'}`}>
+            Travel<span className="text-primary italic">oop</span>
           </Link>
           
           {/* Desktop Nav */}
-          <div className={`hidden md:flex items-center gap-8 text-sm font-medium ${scrolled ? 'text-text' : 'text-white/90'}`}>
-            <Link href="#destinations" className="hover:text-primary transition-colors">Destinations</Link>
-            <Link href="#packages" className="hover:text-primary transition-colors">Packages</Link>
-            <Link href="#blog" className="hover:text-primary transition-colors">Blog</Link>
-            <Link href="#about" className="hover:text-primary transition-colors">About</Link>
-            <div className="flex items-center gap-4 ml-4">
-              <button className="hover:text-primary transition-colors">Sign In</button>
-              <Link href="/build" className="bg-primary hover:bg-primary-hover text-white px-6 py-2.5 rounded-full transition-colors font-medium">
-                Plan Trip &rarr;
-              </Link>
-            </div>
+          <div className={`hidden md:flex items-center gap-10 text-[13px] uppercase tracking-[0.2em] font-bold ${scrolled ? 'text-text' : 'text-white/90'}`}>
+            <Link href="#explore" className="hover:text-primary transition-colors pb-1 border-b-2 border-transparent hover:border-primary">Explore</Link>
+            <Link href="/search" className="hover:text-primary transition-colors pb-1 border-b-2 border-transparent hover:border-primary">Search</Link>
+            <Link href="/trips" className="hover:text-primary transition-colors pb-1 border-b-2 border-transparent hover:border-primary">Trips</Link>
+            <Link href="/profile" className="hover:text-primary transition-colors pb-1 border-b-2 border-transparent hover:border-primary">Profile</Link>
           </div>
 
-          {/* Mobile Nav Toggle */}
+          <div className={`hidden md:flex items-center gap-6 ${scrolled ? 'text-text' : 'text-white'}`}>
+            <Heart className="w-5 h-5 cursor-pointer hover:text-primary transition-colors" />
+            <Bell className="w-5 h-5 cursor-pointer hover:text-primary transition-colors" />
+            <Link href="/login" className="bg-terracotta hover:bg-terracotta-hover text-white px-7 py-3 rounded-full text-xs uppercase tracking-widest font-bold shadow-xl shadow-terracotta/20 transition-all hover:scale-105 active:scale-95">
+              Plan Now
+            </Link>
+          </div>
+
+          {/* Mobile Toggle */}
           <button className={`md:hidden ${scrolled ? 'text-text' : 'text-white'}`} onClick={() => setMobileMenuOpen(true)}>
             <Menu className="w-6 h-6" />
           </button>
         </div>
       </nav>
+
+      {/* Cinematic Hero */}
+      <section className="relative h-screen w-full flex items-center justify-center overflow-hidden">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentImage}
+            initial={{ opacity: 0, scale: 1.1 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.05 }}
+            transition={{ duration: 1.5, ease: "easeInOut" }}
+            className="absolute inset-0 z-0"
+          >
+            <div className="absolute inset-0 bg-black/30 z-10" />
+            <SafeImage 
+              src={heroImages[currentImage]} 
+              category="hero"
+              alt="Luxury India Travel" 
+              fill
+              unoptimized
+              className="object-cover"
+              priority
+            />
+          </motion.div>
+        </AnimatePresence>
+
+        <div className="relative z-20 text-center px-6 max-w-4xl mx-auto">
+          <motion.h1 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.2 }}
+            className="font-display text-6xl md:text-8xl text-white mb-12 tracking-tight drop-shadow-2xl"
+          >
+            Unveil the <span className="italic">Majesty</span> of India
+          </motion.h1>
+
+          {/* Elegant Search Bar */}
+          <motion.div 
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.5 }}
+            className="bg-white/90 backdrop-blur-2xl rounded-2xl p-2 pl-8 flex flex-col md:flex-row items-center gap-6 shadow-2xl border border-white/20"
+          >
+            <div className="flex-1 flex items-center gap-4 w-full">
+              <div className="p-2 bg-primary/5 rounded-lg">
+                <MapPin className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex flex-col items-start">
+                <span className="text-[10px] text-text-muted uppercase tracking-widest font-black mb-1">Destination</span>
+                <input type="text" placeholder="Where to go?" className="bg-transparent border-none text-text outline-none w-full placeholder:text-text-faint text-sm font-medium" />
+              </div>
+            </div>
+            
+            <div className="w-px h-10 bg-divider hidden md:block" />
+
+            <div className="flex-1 flex items-center gap-4 w-full">
+              <div className="p-2 bg-primary/5 rounded-lg">
+                <Compass className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex flex-col items-start">
+                <span className="text-[10px] text-text-muted uppercase tracking-widest font-black mb-1">Journey Type</span>
+                <input type="text" placeholder="Cultural, Adventure..." className="bg-transparent border-none text-text outline-none w-full placeholder:text-text-faint text-sm font-medium" />
+              </div>
+            </div>
+
+            <button className="w-full md:w-auto bg-primary hover:bg-primary-hover text-white px-10 py-5 rounded-xl font-bold transition-all flex items-center justify-center gap-3 shadow-xl shadow-primary/20 hover:scale-[1.02]">
+              <Search className="w-5 h-5" /> Discover
+            </button>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Heritage Bento Grid - Popular Destinations */}
+      <section className="py-32 bg-white" id="explore">
+        <div className="max-w-[1400px] mx-auto px-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-20 gap-8">
+            <div>
+              <div className="flex items-center gap-3 text-primary uppercase tracking-[0.4em] text-[10px] font-black mb-4">
+                <div className="w-8 h-[2px] bg-primary" />
+                Featured Chronicles
+              </div>
+              <h2 className="font-display text-6xl text-text tracking-tighter">Popular <span className="italic">Destinations</span></h2>
+              <p className="text-text-muted max-w-xl text-lg font-light leading-relaxed mt-6">
+                Curated locales that blend ancient traditions with contemporary vibrancy.
+              </p>
+            </div>
+            <Link href="/search" className="text-primary font-bold text-[10px] uppercase tracking-[0.3em] border-b-2 border-primary/20 pb-2 hover:border-primary transition-all">
+              Explore All Destinations
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 grid-rows-2 gap-8 h-[1000px] md:h-[800px]">
+            {/* Jaipur - Large Feature */}
+            <div className="md:col-span-4 md:row-span-2 group relative rounded-[40px] overflow-hidden shadow-2xl">
+              <SafeImage 
+                src="https://images.unsplash.com/photo-1593693397690-362ae9666ec2?q=80&w=1200" 
+                category="city"
+                alt="Jaipur" 
+                fill 
+                unoptimized 
+                priority
+                className="object-cover group-hover:scale-110 transition-transform duration-[3000ms]"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+              <div className="absolute bottom-12 left-12 right-12">
+                <div className="flex items-center gap-3 mb-6">
+                  <span className="bg-terracotta text-white text-[10px] font-black px-4 py-2 rounded-full uppercase tracking-widest border border-white/20">
+                    Royal Rajasthan
+                  </span>
+                  <span className="bg-white/10 backdrop-blur-xl text-white/80 text-[10px] font-bold px-4 py-2 rounded-full uppercase tracking-widest border border-white/10">
+                    Trending Now
+                  </span>
+                </div>
+                <h3 className="font-display text-5xl text-white mb-6 leading-tight">Jaipur: The <span className="italic">Pink</span> Majesty</h3>
+                <p className="text-white/70 text-lg max-w-md font-light leading-relaxed mb-8">
+                  Experience the grandeur of Rajputana palaces and vibrant bazaars under a desert sun.
+                </p>
+                <Link href="/trips/new?city=Jaipur" className="inline-flex items-center gap-4 bg-white text-black px-10 py-5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-primary hover:text-white transition-all shadow-xl">
+                  Build Your Plan <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </div>
+
+            {/* Kerala */}
+            <div className="md:col-span-2 md:row-span-1 group relative rounded-[40px] overflow-hidden shadow-xl">
+              <SafeImage src="https://images.unsplash.com/photo-1593181629936-11c609b8db9b?q=80&w=800" category="city" alt="Kerala" fill unoptimized className="object-cover group-hover:scale-110 transition-transform duration-[2000ms]" />
+              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors" />
+              <div className="absolute bottom-8 left-8">
+                <h4 className="font-display text-2xl text-white uppercase tracking-tighter">Kerala Backwaters</h4>
+                <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest mt-2">Wellness & Nature</p>
+              </div>
+            </div>
+
+            {/* Varanasi */}
+            <div className="md:col-span-2 md:row-span-1 group relative rounded-[40px] overflow-hidden shadow-xl">
+              <SafeImage src="https://images.unsplash.com/photo-1548013146-72479768bbaa?q=80&w=800" category="city" alt="Varanasi" fill unoptimized className="object-cover group-hover:scale-110 transition-transform duration-[2000ms]" />
+              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors" />
+              <div className="absolute bottom-8 left-8">
+                <h4 className="font-display text-2xl text-white uppercase tracking-tighter">Varanasi Eternal</h4>
+                <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest mt-2">Spiritual Heart</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Bespoke Journeys Section */}
+      <section className="py-32 bg-bg border-y border-divider">
+        <div className="max-w-[1400px] mx-auto px-8 text-center mb-24">
+          <h2 className="font-display text-5xl text-text mb-4 italic">Bespoke Journeys</h2>
+          <p className="text-text-muted text-lg max-w-2xl mx-auto font-light leading-relaxed">
+            Expertly scoured journeys designed for the discerning explorer, blending luxury stays with authentic local experiences.
+          </p>
+        </div>
+
+        <div className="max-w-[1400px] mx-auto px-8 grid grid-cols-1 md:grid-cols-3 gap-10">
+          {expeditions.map((item, idx) => (
+            <div key={idx} className="bg-white rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all hover:-translate-y-2 group">
+              <div className="h-72 relative">
+                <SafeImage src={item.img} category="activity" alt={item.title} fill unoptimized className="object-cover group-hover:scale-110 transition-transform duration-700" />
+                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1">
+                  <Star className="w-3 h-3 text-accent-gold fill-accent-gold" /> 4.9
+                </div>
+              </div>
+              <div className="p-8">
+                <div className="flex justify-between items-start mb-4">
+                  <h3 className="font-display text-2xl text-text leading-tight group-hover:text-primary transition-colors">{item.title}</h3>
+                  <span className="text-primary font-bold text-sm whitespace-nowrap">{item.duration}</span>
+                </div>
+                <p className="text-text-muted text-sm mb-6 leading-relaxed">
+                  Exclusive wildlife safari through Ranthambore and Kanha national reserves.
+                </p>
+                <div className="flex flex-wrap gap-2 mb-8">
+                  {item.tags.map(tag => (
+                    <span key={tag} className="px-3 py-1 bg-surface-2 rounded-lg text-[10px] font-bold uppercase tracking-widest text-text-muted">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+                <div className="flex items-center justify-between pt-6 border-t border-divider">
+                  <div>
+                    <p className="text-[10px] text-text-faint uppercase font-bold tracking-widest mb-1">Starting From</p>
+                    <p className="text-xl font-display text-text">{item.price}</p>
+                  </div>
+                  <button className="bg-terracotta hover:bg-terracotta-hover text-white px-6 py-2.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-all">
+                    Explore Itinerary
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Scout Circle Section */}
+      <section className="py-32 bg-white">
+        <div className="max-w-[1400px] mx-auto px-8">
+          <div className="relative rounded-[40px] overflow-hidden p-16 md:p-32 text-center text-white shadow-2xl">
+            <SafeImage src="https://images.unsplash.com/photo-1544124499-58912cbddaad?q=80&w=2000" alt="Join Scout Circle" fill unoptimized className="object-cover" />
+            <div className="absolute inset-0 bg-black/60 z-10" />
+            
+            <div className="relative z-20 max-w-2xl mx-auto">
+              <h2 className="font-display text-5xl md:text-7xl mb-8">Join the Scout Circle</h2>
+              <p className="text-white/70 text-lg mb-12 font-light leading-relaxed">
+                Receive curated travel stories, exclusive heritage opening alerts, and member-only pricing delivered to your inbox.
+              </p>
+              
+              <div className="flex flex-col md:flex-row gap-4">
+                <input 
+                  type="email" 
+                  placeholder="Your email address" 
+                  className="flex-1 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl px-8 py-5 text-white placeholder:text-white/40 focus:outline-none focus:border-primary transition-all"
+                />
+                <button className="bg-[#FF9F54] hover:bg-[#FF8F34] text-black px-12 py-5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all shadow-xl shadow-[#FF9F54]/20 active:scale-95">
+                  Subscribe
+                </button>
+              </div>
+              <p className="mt-6 text-white/30 text-[10px] font-bold uppercase tracking-widest">
+                We respect your privacy. Unsubscribe at any time.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* High-Fidelity Footer */}
+      <footer className="bg-[#1A1A1A] text-white pt-24 pb-12">
+        <div className="max-w-[1400px] mx-auto px-8 grid grid-cols-1 md:grid-cols-12 gap-16 mb-24">
+          <div className="md:col-span-4">
+            <Link href="/" className="font-display text-4xl tracking-tighter mb-8 block">
+              Travel<span className="text-primary italic">oop</span>
+            </Link>
+            <p className="text-white/40 text-sm leading-relaxed mb-8 max-w-sm">
+              Crafting bespoke journeys through the soul of India since 2012. Our mission is to reconnect discerning travelers with authentic heritage and hidden gems.
+            </p>
+            <div className="flex gap-6">
+              <Globe className="w-5 h-5 text-white/20 hover:text-white cursor-pointer transition-colors" />
+              <Search className="w-5 h-5 text-white/20 hover:text-white cursor-pointer transition-colors" />
+              <Bell className="w-5 h-5 text-white/20 hover:text-white cursor-pointer transition-colors" />
+            </div>
+          </div>
+
+          <div className="md:col-span-2">
+            <h5 className="font-bold text-xs uppercase tracking-[0.2em] mb-8 text-white/60">About Us</h5>
+            <ul className="space-y-4 text-sm font-medium text-white/40">
+              <li className="hover:text-white transition-colors cursor-pointer">Our Story</li>
+              <li className="hover:text-white transition-colors cursor-pointer">Sustainability</li>
+              <li className="hover:text-white transition-colors cursor-pointer">Travel Journal</li>
+              <li className="hover:text-white transition-colors cursor-pointer">Careers</li>
+            </ul>
+          </div>
+
+          <div className="md:col-span-2">
+            <h5 className="font-bold text-xs uppercase tracking-[0.2em] mb-8 text-white/60">Destinations</h5>
+            <ul className="space-y-4 text-sm font-medium text-white/40">
+              <li className="hover:text-white transition-colors cursor-pointer">North India</li>
+              <li className="hover:text-white transition-colors cursor-pointer">South India</li>
+              <li className="hover:text-white transition-colors cursor-pointer">East India</li>
+              <li className="hover:text-white transition-colors cursor-pointer">West India</li>
+            </ul>
+          </div>
+
+          <div className="md:col-span-2">
+            <h5 className="font-bold text-xs uppercase tracking-[0.2em] mb-8 text-white/60">Travel Guides</h5>
+            <ul className="space-y-4 text-sm font-medium text-white/40">
+              <li className="hover:text-white transition-colors cursor-pointer">Cultural Etiquette</li>
+              <li className="hover:text-white transition-colors cursor-pointer">Visa Info</li>
+              <li className="hover:text-white transition-colors cursor-pointer">Weather Guide</li>
+              <li className="hover:text-white transition-colors cursor-pointer">Packing List</li>
+            </ul>
+          </div>
+
+          <div className="md:col-span-2">
+            <h5 className="font-bold text-xs uppercase tracking-[0.2em] mb-8 text-white/60">Legal</h5>
+            <ul className="space-y-4 text-sm font-medium text-white/40">
+              <li className="hover:text-white transition-colors cursor-pointer">Privacy Policy</li>
+              <li className="hover:text-white transition-colors cursor-pointer">Terms of Service</li>
+              <li className="hover:text-white transition-colors cursor-pointer">Cookie Policy</li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="max-w-[1400px] mx-auto px-8 pt-12 border-t border-white/5 flex flex-col md:flex-row justify-center items-center text-[10px] uppercase tracking-[0.3em] font-black text-white/20">
+          <p>© 2026 Traveloop. Modern Heritage of India.</p>
+        </div>
+      </footer>
 
       {/* Mobile Menu Overlay */}
       <AnimatePresence>
@@ -86,353 +389,28 @@ export default function Home() {
             initial={{ opacity: 0, x: '100%' }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: '100%' }}
-            transition={{ type: 'tween', duration: 0.3 }}
-            className="fixed inset-0 z-[60] bg-bg flex flex-col p-6"
+            className="fixed inset-0 z-[100] bg-white flex flex-col p-10"
           >
-            <div className="flex justify-between items-center mb-12">
-              <div className="font-display text-2xl text-text">Trip-Smart</div>
+            <div className="flex justify-between items-center mb-20">
+              <div className="font-display text-2xl text-text tracking-tighter">Travel<span className="text-primary italic">oop</span></div>
               <button onClick={() => setMobileMenuOpen(false)} className="p-2 text-text">
-                <X className="w-6 h-6" />
+                <X className="w-8 h-8" />
               </button>
             </div>
-            <div className="flex flex-col gap-6 font-display text-3xl">
-              <Link href="#destinations" onClick={() => setMobileMenuOpen(false)}>Destinations</Link>
-              <Link href="#packages" onClick={() => setMobileMenuOpen(false)}>Packages</Link>
-              <Link href="#blog" onClick={() => setMobileMenuOpen(false)}>Journal</Link>
+            <div className="flex flex-col gap-10 font-display text-5xl">
+              <Link href="#explore" onClick={() => setMobileMenuOpen(false)}>Explore</Link>
+              <Link href="/search" onClick={() => setMobileMenuOpen(false)}>Search</Link>
+              <Link href="/trips" onClick={() => setMobileMenuOpen(false)}>My Trips</Link>
+              <Link href="/profile" onClick={() => setMobileMenuOpen(false)}>Identity</Link>
             </div>
-            <div className="mt-auto pb-8 flex flex-col gap-4">
-              <Link href="/build" className="bg-primary text-white text-center py-4 rounded-full font-medium text-lg">
-                Plan Your Trip
+            <div className="mt-auto flex flex-col gap-6">
+              <Link href="/login" className="bg-primary text-white text-center py-6 rounded-2xl font-black text-sm uppercase tracking-widest shadow-2xl shadow-primary/20">
+                Plan Now
               </Link>
-              <button className="text-text-muted py-2">Sign In to Account</button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Hero Section */}
-      <section className="relative h-[100vh] min-h-[600px] w-full flex flex-col justify-between overflow-hidden">
-        {/* Background Images */}
-        {heroImages.map((src, index) => (
-          <motion.div
-            key={src}
-            initial={{ opacity: 0, scale: 1.05 }}
-            animate={{ 
-              opacity: index === currentImage ? 1 : 0,
-              scale: index === currentImage ? 1 : 1.05
-            }}
-            transition={{ duration: 1.2, ease: "easeInOut" }}
-            className="absolute inset-0 z-0"
-          >
-            <div className="absolute inset-0 bg-gradient-to-b from-[oklch(0.1_0.02_40_/_0.2)] to-[oklch(0.1_0.02_40_/_0.7)] z-10" />
-            <Image 
-              src={src} 
-              alt="Indian Landscape" 
-              fill
-              unoptimized
-              className="object-cover"
-            />
-          </motion.div>
-        ))}
-
-        {/* Hero Content */}
-        <div className="relative z-20 flex-1 max-w-[1280px] w-full mx-auto px-6 flex flex-col justify-end pb-32 pt-32">
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="max-w-2xl"
-          >
-            <div className="inline-flex items-center gap-2 text-white/80 uppercase tracking-widest text-xs font-semibold mb-6">
-              <span>🌏</span> DISCOVER INDIA
-            </div>
-            <h1 className="font-display text-5xl md:text-7xl lg:text-[80px] leading-[1.1] text-white mb-6">
-              Where Will You <br/><span className="italic text-primary/90">Wander</span> Next?
-            </h1>
-            <p className="text-white/80 text-lg md:text-xl max-w-lg font-light">
-              Hand-picked journeys for the restless soul. Experience the authentic magic of India.
-            </p>
-          </motion.div>
-        </div>
-
-        {/* Search Bar - Floating Bottom Center */}
-        <div className="absolute bottom-8 left-0 right-0 z-30 px-4">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.5 }}
-            className="max-w-4xl mx-auto glass-panel rounded-full p-2 pl-6 flex flex-col md:flex-row items-center gap-4"
-          >
-            <div className="flex-1 flex items-center gap-3 w-full border-b md:border-b-0 md:border-r border-divider/20 pb-3 md:pb-0 pt-2 md:pt-0">
-              <MapPin className="w-5 h-5 text-primary" />
-              <div className="flex flex-col">
-                <span className="text-[10px] text-text-muted uppercase tracking-wider font-semibold">Destination</span>
-                <input type="text" placeholder="Where to?" className="bg-transparent border-none text-text outline-none w-full placeholder:text-text-faint text-sm md:text-base font-medium" />
-              </div>
-            </div>
-            <div className="flex-1 flex items-center gap-3 w-full border-b md:border-b-0 md:border-r border-divider/20 pb-3 md:pb-0 pt-2 md:pt-0">
-              <Calendar className="w-5 h-5 text-primary" />
-              <div className="flex flex-col">
-                <span className="text-[10px] text-text-muted uppercase tracking-wider font-semibold">Dates</span>
-                <input type="text" placeholder="Add dates" className="bg-transparent border-none text-text outline-none w-full placeholder:text-text-faint text-sm md:text-base font-medium" />
-              </div>
-            </div>
-            <div className="flex-1 flex items-center gap-3 w-full pb-3 md:pb-0 pt-2 md:pt-0">
-              <Users className="w-5 h-5 text-primary" />
-              <div className="flex flex-col">
-                <span className="text-[10px] text-text-muted uppercase tracking-wider font-semibold">Travellers</span>
-                <input type="text" placeholder="2 Guests" className="bg-transparent border-none text-text outline-none w-full placeholder:text-text-faint text-sm md:text-base font-medium" />
-              </div>
-            </div>
-            <button className="w-full md:w-auto bg-primary hover:bg-primary-hover text-white px-8 py-4 rounded-full font-medium transition-colors flex items-center justify-center">
-              Search
-            </button>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Trending Destinations */}
-      <section className="py-[clamp(4rem,8vw,8rem)] bg-bg overflow-hidden" id="destinations">
-        <div className="max-w-[1280px] mx-auto px-6">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10">
-            <div>
-              <div className="text-primary text-xs tracking-widest uppercase font-semibold mb-3">MOST LOVED IN 2025</div>
-              <h2 className="font-display text-4xl md:text-[56px] leading-tight text-text">Trending Destinations</h2>
-            </div>
-            <Link href="/destinations" className="text-text hover:text-primary transition-colors flex items-center gap-2 mt-4 md:mt-0 font-medium pb-2 border-b border-transparent hover:border-primary">
-              View All <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-
-          <div className="flex overflow-x-auto gap-4 md:gap-6 pb-8 no-scrollbar snap-x snap-mandatory">
-            {trendingDestinations.map((dest, i) => (
-              <div key={i} className="min-w-[280px] md:min-w-0 md:flex-1 shrink-0 snap-center group cursor-pointer">
-                <div className="rounded-[16px] overflow-hidden bg-surface shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 relative">
-                  <div className="absolute top-3 left-3 bg-primary text-white text-[10px] font-medium px-3 py-1 rounded-full tracking-widest uppercase z-10">
-                    Bestseller
-                  </div>
-                  <div className="aspect-[3/4] overflow-hidden relative">
-                    <Image 
-                      src={dest.img} 
-                      alt={dest.name} 
-                      fill
-                      unoptimized
-                      className="object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
-                  </div>
-                  <div className="p-5">
-                    <h3 className="font-display text-2xl text-text mb-2 transition-colors group-hover:text-primary">{dest.name}</h3>
-                    <div className="flex items-center gap-3 text-xs text-text-muted">
-                      <span className="flex items-center text-text"><Star className="w-3 h-3 text-accent-gold fill-accent-gold mr-1" /> {dest.rating}</span>
-                      <span>•</span>
-                      <span>{dest.days}</span>
-                    </div>
-                    <div className="mt-4 font-medium text-sm text-primary">
-                      From {dest.price}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Editorial Feature */}
-      <section className="py-[clamp(2rem,4vw,4rem)] bg-bg">
-        <div className="max-w-[1280px] mx-auto px-6">
-          <div className="flex flex-col lg:flex-row rounded-[24px] overflow-hidden bg-surface shadow-sm">
-            <div className="lg:w-[60%] h-[400px] lg:h-[600px] relative overflow-hidden">
-              <Image 
-                src="https://picsum.photos/seed/varanasi-dawn/1200/800" 
-                alt="Varanasi Ghats" 
-                fill
-                unoptimized
-                className="object-cover transition-transform duration-1000 hover:scale-105"
-              />
-            </div>
-            <div className="lg:w-[40%] p-10 lg:p-16 flex flex-col justify-center">
-              <div className="text-primary text-xs tracking-widest uppercase font-semibold mb-4">FEATURED JOURNEY</div>
-              <h2 className="font-display text-4xl lg:text-[48px] italic text-text mb-6 leading-tight">
-                "The Ganges <br/>at First Light"
-              </h2>
-              <p className="text-text-muted mb-8 leading-relaxed">
-                Experience the spiritual awakening of the world's oldest living city. A guided journey through hidden alleys, ancient rituals, and sunset boat rides that you will remember for a lifetime.
-              </p>
-              <div className="flex gap-4 text-sm font-medium text-text-muted mb-8 pb-8 border-b border-divider">
-                <span>8 Days · 7 Nights</span>
-                <span>•</span>
-                <span className="text-primary">From ₹42,000</span>
-              </div>
-              <button className="bg-transparent border border-text text-text hover:bg-text hover:text-bg px-8 py-3 rounded-full font-medium transition-all w-max">
-                Explore Package
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Categories */}
-      <section className="py-[clamp(4rem,8vw,8rem)] bg-bg">
-        <div className="max-w-[960px] mx-auto px-6 text-center">
-          <h2 className="font-display text-3xl md:text-4xl text-text mb-12">Find Your Element</h2>
-          <div className="flex overflow-x-auto gap-4 md:justify-center pb-4 no-scrollbar">
-            {categories.map((cat, i) => (
-              <div key={i} className="group cursor-pointer shrink-0 text-center">
-                <div className="w-[160px] md:w-[140px] h-[200px] rounded-[100px] overflow-hidden relative mb-4 shadow-sm group-hover:shadow-md transition-all group-hover:-translate-y-1 border-2 border-transparent group-hover:border-primary/20">
-                  <div className="absolute inset-0 bg-primary/10 group-hover:bg-primary/20 transition-colors z-10 mix-blend-multiply" />
-                  <Image src={cat.img} alt={cat.name} fill unoptimized className="object-cover" />
-                </div>
-                <div className="flex items-center justify-center gap-2 font-medium text-text group-hover:text-primary transition-colors">
-                  <span>{cat.icon}</span> {cat.name}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Trust Section */}
-      <section className="py-[clamp(6rem,10vw,12rem)] bg-surface">
-        <div className="max-w-[1280px] mx-auto px-6 space-y-24">
-          
-          <div className="flex flex-col md:flex-row items-center gap-12 md:gap-20">
-            <div className="md:w-1/2">
-              <div className="relative w-full h-[400px] rounded-[24px] overflow-hidden shadow-lg shadow-text/5">
-                <Image src="https://picsum.photos/seed/tour-guide-india/500/400" alt="Expert local tour guide in India" fill unoptimized className="object-cover" />
-              </div>
-            </div>
-            <div className="md:w-1/2">
-              <div className="text-primary text-xs tracking-widest uppercase font-semibold mb-4">THE TRIP-SMART DIFFERENCE</div>
-              <h3 className="font-display text-3xl md:text-4xl text-text mb-6">Expert Local Guides</h3>
-              <p className="text-text-muted leading-relaxed mb-6">
-                We partner with storytellers who know every hidden gem and local legend. Experience the destination not as a tourist, but as a welcomed guest.
-              </p>
-              <Link href="/about" className="text-primary font-medium flex items-center gap-2 hover:underline">
-                Meet our experts <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-          </div>
-
-          <div className="flex flex-col-reverse md:flex-row items-center gap-12 md:gap-20">
-            <div className="md:w-1/2">
-              <div className="text-primary text-xs tracking-widest uppercase font-semibold mb-4">CURATED ACCOMMODATION</div>
-              <h3 className="font-display text-3xl md:text-4xl text-text mb-6">Handpicked Stays</h3>
-              <p className="text-text-muted leading-relaxed mb-6">
-                From heritage havelis to boutique eco-resorts, every stay is personally vetted for warmth, authenticity, and responsible tourism practices.
-              </p>
-              <Link href="/stays" className="text-primary font-medium flex items-center gap-2 hover:underline">
-                Explore our stays <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-            <div className="md:w-1/2">
-              <div className="relative w-full h-[400px] rounded-[24px] overflow-hidden shadow-lg shadow-text/5">
-                <Image src="https://picsum.photos/seed/mountain-hotel-luxury/500/400" alt="Handpicked luxury mountain stay" fill unoptimized className="object-cover" />
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="py-[clamp(4rem,8vw,8rem)] bg-bg">
-        <div className="max-w-[1280px] mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="font-display text-4xl text-text">Notes from the Road</h2>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[1,2,3].map((i) => (
-              <div key={i} className="bg-surface-2 p-8 rounded-[16px] border border-divider shadow-sm">
-                <div className="flex gap-1 text-accent-gold mb-6">
-                  <Star className="w-4 h-4 fill-current" /><Star className="w-4 h-4 fill-current" /><Star className="w-4 h-4 fill-current" /><Star className="w-4 h-4 fill-current" /><Star className="w-4 h-4 fill-current" />
-                </div>
-                <p className="text-text leading-relaxed mb-8 italic">
-                  "The Spiti Valley trip was unlike anything I've experienced. Every detail was perfect, from the homestays to the breathtaking drives."
-                </p>
-                <div className="flex items-center gap-4">
-                  <div className="relative w-12 h-12 rounded-full bg-divider overflow-hidden">
-                    <Image src={`https://i.pravatar.cc/100?img=${i+10}`} alt="Avatar" fill unoptimized className="object-cover" />
-                  </div>
-                  <div>
-                    <div className="font-medium text-text text-sm">Priya Sharma</div>
-                    <div className="text-text-faint text-xs mt-1">Mumbai · March 2025</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Newsletter */}
-      <section className="relative py-32 bg-text text-bg overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-text/80 z-10 mix-blend-multiply" />
-          <Image src="https://picsum.photos/seed/night-stars-landscape/1920/500" alt="Night sky over Indian landscape" fill unoptimized className="object-cover" />
-        </div>
-        
-        <div className="relative z-20 max-w-[640px] mx-auto px-6 text-center">
-          <h2 className="font-display text-4xl md:text-5xl mb-6 text-white">Your Next Adventure <br/><span className="italic text-primary">Starts Here</span></h2>
-          <p className="text-bg/80 mb-10 text-lg">
-            Get curated trip ideas, exclusive deals, and insider travel tips delivered to your inbox.
-          </p>
-          <div className="flex flex-col md:flex-row gap-4 justify-center">
-            <input type="email" placeholder="Email address" className="bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder:text-white/50 px-6 py-4 rounded-full outline-none focus:border-primary flex-1 max-w-[320px]" />
-            <button className="bg-primary hover:bg-primary-hover text-white px-8 py-4 rounded-full font-medium transition-colors">
-              Get Inspired &rarr;
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-bg py-16 border-t border-divider">
-        <div className="max-w-[1280px] mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12">
-          <div className="col-span-1 md:col-span-1">
-            <Link href="/" className="font-display text-2xl tracking-wide text-text mb-4 block">
-              Trip-Smart
-            </Link>
-            <p className="text-text-muted text-sm leading-relaxed max-w-xs">
-              A cinematic window to India's most extraordinary destinations — as personal as a handwritten travel journal.
-            </p>
-          </div>
-          <div>
-            <h4 className="font-semibold text-text mb-6 text-sm uppercase tracking-wider">Destinations</h4>
-            <ul className="space-y-4 text-sm text-text-muted">
-              <li><Link href="#" className="hover:text-primary transition-colors">Rajasthan</Link></li>
-              <li><Link href="#" className="hover:text-primary transition-colors">Kerala</Link></li>
-              <li><Link href="#" className="hover:text-primary transition-colors">Himachal Pradesh</Link></li>
-              <li><Link href="#" className="hover:text-primary transition-colors">North East</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-semibold text-text mb-6 text-sm uppercase tracking-wider">Company</h4>
-            <ul className="space-y-4 text-sm text-text-muted">
-              <li><Link href="#" className="hover:text-primary transition-colors">About Us</Link></li>
-              <li><Link href="#" className="hover:text-primary transition-colors">Travel Journal</Link></li>
-              <li><Link href="#" className="hover:text-primary transition-colors">Careers</Link></li>
-              <li><Link href="#" className="hover:text-primary transition-colors">Sustainability</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-semibold text-text mb-6 text-sm uppercase tracking-wider">Connect</h4>
-            <ul className="space-y-4 text-sm text-text-muted">
-              <li><Link href="#" className="hover:text-primary transition-colors">Contact Support</Link></li>
-              <li><Link href="#" className="hover:text-primary transition-colors">Instagram</Link></li>
-              <li><Link href="#" className="hover:text-primary transition-colors">Pinterest</Link></li>
-            </ul>
-          </div>
-        </div>
-        <div className="max-w-[1280px] mx-auto px-6 mt-16 pt-8 border-t border-divider text-center md:text-left flex flex-col md:flex-row justify-between text-xs text-text-faint">
-          <p>© 2026 Trip-Smart. All rights reserved.</p>
-          <div className="flex gap-4 mt-4 md:mt-0 justify-center">
-            <Link href="#" className="hover:text-text-muted transition-colors">Privacy Policy</Link>
-            <Link href="#" className="hover:text-text-muted transition-colors">Terms of Service</Link>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

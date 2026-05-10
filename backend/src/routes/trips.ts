@@ -1,7 +1,10 @@
 import express from 'express';
+import axios from 'axios';
 import Trip from '../models/Trip';
 import Stop from '../models/Stop';
 import Activity from '../models/Activity';
+import BudgetItem from '../models/BudgetItem';
+import ExploreActivity from '../models/ExploreActivity';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
 
 const router = express.Router();
@@ -16,14 +19,138 @@ router.get('/', authMiddleware, async (req: AuthRequest, res) => {
   }
 });
 
-// POST /api/trips — create a new trip
+// POST /api/trips — create a new trip and auto-populate with real data
 router.post('/', authMiddleware, async (req: AuthRequest, res) => {
-  try {
-    const newTrip = new Trip({ ...req.body, userId: req.userId });
-    const savedTrip = await newTrip.save();
+    const { title, startDate, endDate } = req.body;
+    if (!title || !startDate || !endDate) {
+      return res.status(400).json({ error: 'Title, startDate, and endDate are required' });
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return res.status(400).json({ error: 'Invalid date format' });
+    }
+
+    try {
+      const newTrip = new Trip({ ...req.body, userId: req.userId });
+      const savedTrip = await newTrip.save();
+
+    // AUTO-POPULATION LOGIC
+    // Extract city from title (e.g. "Expedition to Jaipur" -> "Jaipur")
+    const cityMatch = title.match(/(?:to|in|at|for)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i);
+    let cityName = cityMatch ? cityMatch[1] : null;
+
+    // Fallback: if no city in title, maybe use description or just default to a popular one for data demo
+    if (!cityName) cityName = "India";
+
+    // Calculate total days
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+    // Limit diffDays to prevent accidental infinite loops or excessive data creation
+    const safeDiffDays = Math.min(diffDays, 30);
+
+    // Fetch "real world" base data for this city
+    let localActivities = await ExploreActivity.find({
+      location: { $regex: cityName, $options: 'i' }
+    });
+
+    // If we don't have enough data, discover via Wikipedia
+    if (localActivities.length < safeDiffDays * 2) {
+      try {
+        const wikiRes = await axios.get(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(cityName)}`);
+        if (wikiRes.data && wikiRes.data.extract) {
+          const genericSpots = ['Heritage District', 'Cultural Center', 'Local Bazaar', 'Nature Park', 'Historic Fort', 'Skyline View'];
+          for (const spot of genericSpots) {
+            const exists = localActivities.find(a => a.title.includes(spot));
+            if (!exists) {
+              const newExp = new ExploreActivity({
+                title: `${cityName} ${spot}`,
+                location: `${cityName}, India`,
+                category: 'Sightseeing',
+                description: `A significant landmark in ${cityName}. ${wikiRes.data.extract.substring(0, 100)}...`,
+                image: wikiRes.data.thumbnail?.source || 'https://images.unsplash.com/photo-1524492459416-81446b1f315e',
+                priceRange: '₹₹',
+                duration: '2 hours',
+                rating: 4.5
+              });
+              const savedExp = await newExp.save();
+              localActivities.push(savedExp);
+            }
+          }
+        }
+      } catch (e: any) {
+        console.error('Wiki fetch failed for', cityName, ':', e.message);
+      }
+    }
+
+    // FINAL FALLBACK: If still no activities, add hardcoded generic ones to prevent division by zero
+    if (localActivities.length === 0) {
+      localActivities = [{
+        title: `${cityName} Exploration`,
+        category: 'Sightseeing',
+        priceRange: '₹₹',
+        location: cityName
+      } as any];
+    }
+
+    // Create one STOP per DAY
+    let activityCounter = 0;
+    for (let day = 0; day < safeDiffDays; day++) {
+      const stopDate = new Date(start);
+      stopDate.setDate(start.getDate() + day);
+
+      const stop = new Stop({
+        tripId: savedTrip._id,
+        cityName: cityName,
+        country: 'India',
+        orderIndex: day,
+        arrivalDate: stopDate,
+        departureDate: stopDate
+      });
+      await stop.save();
+
+      // Add 2 unique activities to this specific day
+      for (let i = 0; i < 2; i++) {
+        const exp = localActivities[activityCounter % localActivities.length];
+        activityCounter++;
+
+        const startTime = new Date(stopDate);
+        startTime.setHours(10 + (i * 4), 0, 0, 0);
+
+        let durationMin = 120;
+        let cost = exp.priceRange === '₹₹₹' ? 2500 : (exp.priceRange === '₹₹' ? 800 : 200);
+
+        const activity = new Activity({
+          stopId: stop._id,
+          title: exp.title || `${cityName} Exploration`,
+          type: exp.category || 'Sightseeing',
+          cost: cost,
+          duration: durationMin,
+          startTime: startTime,
+          orderIndex: i
+        });
+        await activity.save();
+
+        // Add to Budget
+        if (cost > 0) {
+          await new BudgetItem({
+            tripId: savedTrip._id,
+            category: 'Activities',
+            description: `Day ${day + 1}: ${exp.title}`,
+            amount: cost,
+            qty: 1
+          }).save();
+        }
+      }
+    }
+
     res.status(201).json(savedTrip);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to create trip' });
+  } catch (error: any) {
+    console.error('Trip creation error:', error);
+    res.status(500).json({ error: error.message || 'Failed to create trip' });
   }
 });
 

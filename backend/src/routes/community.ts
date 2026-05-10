@@ -22,7 +22,7 @@ router.post('/', authMiddleware, async (req, res) => {
   try {
     const { tripId, caption } = req.body;
     const post = new CommunityPost({
-      userId: (req as any).user.id,
+      userId: (req as any).userId,
       tripId,
       caption,
     });

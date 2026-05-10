@@ -12,6 +12,7 @@ import budgetRoutes from './routes/budget';
 import checklistRoutes from './routes/checklist';
 import communityRoutes from './routes/community';
 import exploreRoutes from './routes/explore';
+import aiRoutes from './routes/ai';
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ app.use('/api/budget', budgetRoutes);
 app.use('/api/checklist', checklistRoutes);
 app.use('/api/community', communityRoutes);
 app.use('/api/explore', exploreRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Health check
 app.get('/api/health', (_, res) => {

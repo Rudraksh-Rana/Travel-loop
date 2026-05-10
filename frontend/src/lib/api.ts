@@ -17,6 +17,9 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
   });
 
   if (!res.ok) {
+    if (res.status === 401 && typeof window !== 'undefined') {
+      localStorage.removeItem('traveloop_token');
+    }
     const error = await res.json().catch(() => ({ error: 'Request failed' }));
     throw new Error(error.error || `HTTP ${res.status}`);
   }
@@ -88,6 +91,7 @@ export const activitiesApi = {
 
 // ── Notes ──────────────────────────────────────────────
 export const notesApi = {
+  listAll: () => apiFetch<any[]>('/notes/all'),
   list: (tripId: string) => apiFetch<any[]>(`/notes/trip/${tripId}`),
   create: (data: any) =>
     apiFetch<any>('/notes', { method: 'POST', body: JSON.stringify(data) }),
@@ -132,4 +136,10 @@ export const exploreApi = {
     apiFetch<any[]>(`/explore/destinations?q=${encodeURIComponent(query)}`),
   searchActivities: (query: string) =>
     apiFetch<any[]>(`/explore/activities?q=${encodeURIComponent(query)}`),
+};
+
+// ── AI Concierge ───────────────────────────────────────
+export const aiApi = {
+  query: (prompt: string) =>
+    apiFetch<any>('/ai/query', { method: 'POST', body: JSON.stringify({ prompt }) }),
 };

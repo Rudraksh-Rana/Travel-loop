@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
+import AIConcierge from '@/components/AIConcierge';
 
 export const metadata: Metadata = {
   title: 'Traveloop | Personalized Travel Planning',
@@ -20,6 +21,7 @@ export default function RootLayout({
       <body className="bg-bg text-text font-body antialiased selection:bg-primary selection:text-white">
         <AuthProvider>
           {children}
+          <AIConcierge />
         </AuthProvider>
       </body>
     </html>

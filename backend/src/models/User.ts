@@ -22,9 +22,10 @@ const UserSchema: Schema = new Schema({
   photoUrl: { type: String },
   phone: { type: String },
   city: { type: String },
-  country: { type: String },
+  country: { type: String, default: 'India' },
   bio: { type: String },
-  role: { type: String, enum: ['user', 'admin'], default: 'user' },
+  role: { type: String, default: 'traveler' },
+  group: { type: String, default: 'global_travelers' },
   savedDestinations: [{ type: String }]
 }, { timestamps: true });
 
