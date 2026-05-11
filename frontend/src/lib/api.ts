@@ -1,5 +1,9 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
+// Lightweight in-memory cache for GET requests
+const cache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_TTL = 30000; // 30 seconds for travel data freshness
+
 function getAuthHeaders(): HeadersInit {
   if (typeof window === 'undefined') return {};
   const token = localStorage.getItem('traveloop_token');
@@ -7,6 +11,18 @@ function getAuthHeaders(): HeadersInit {
 }
 
 async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const method = options.method || 'GET';
+  const isGet = method === 'GET';
+
+  // Check cache for GET requests
+  if (isGet && cache.has(path)) {
+    const entry = cache.get(path)!;
+    if (Date.now() - entry.timestamp < CACHE_TTL) {
+      return entry.data as T;
+    }
+    cache.delete(path); // Expired
+  }
+
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
     headers: {
@@ -24,7 +40,14 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
     throw new Error(error.error || `HTTP ${res.status}`);
   }
 
-  return res.json();
+  const data = await res.json();
+
+  // Save to cache if it's a GET request
+  if (isGet) {
+    cache.set(path, { data, timestamp: Date.now() });
+  }
+
+  return data;
 }
 
 // ── Auth ───────────────────────────────────────────────

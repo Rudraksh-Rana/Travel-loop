@@ -23,16 +23,16 @@ export default function Sidebar() {
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-[280px] bg-black/95 border-r border-white/5 flex flex-col z-50
-                       max-lg:hidden shadow-[20px_0_40px_rgba(0,0,0,0.5)]">
+                       max-lg:hidden shadow-[20px_0_40px_rgba(0,0,0,0.5)] animate-fadeIn">
       
       {/* Cinematic Logo Area */}
       <div className="h-32 flex items-center px-10 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary via-transparent to-terracotta" />
+          <div className="absolute inset-0 bg-gradient-to-br from-primary via-transparent to-terracotta animate-gradientShift" />
         </div>
-        <Link href="/" className="relative z-10 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
-            <Navigation className="w-4 h-4 text-white fill-white" />
+        <Link href="/" className="relative z-10 flex items-center gap-3 group">
+          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform duration-500 animate-pulseGlow">
+            <Navigation className="w-5 h-5 text-white fill-white" />
           </div>
           <span className="font-display text-2xl tracking-tighter text-white">
             Travel<span className="text-primary italic">oop</span>
@@ -41,61 +41,67 @@ export default function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 py-10 px-6 space-y-3 overflow-y-auto custom-scrollbar">
-        <div className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20 px-4 mb-8 flex items-center gap-3">
+      <nav className="flex-1 py-10 px-6 space-y-3 overflow-y-auto no-scrollbar">
+        <div className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20 px-4 mb-8 flex items-center gap-3 animate-fadeInSlideLeft" style={{ animationDelay: '100ms' }}>
           <div className="w-4 h-[1px] bg-white/10" />
-          Command
+          Command Center
         </div>
-        {navItems.map((item) => {
-          const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-5 px-6 py-4 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] transition-all relative group
-                ${isActive
-                  ? 'text-white bg-white/10 border border-white/10 shadow-2xl'
-                  : 'text-white/30 hover:text-white hover:bg-white/5'
-                }`}
-            >
-              {isActive && (
-                <div className="absolute left-0 w-1.5 h-6 bg-primary rounded-r-full shadow-[0_0_15px_rgba(var(--color-primary-rgb),0.8)]" />
-              )}
-              <Icon className={`w-5 h-5 transition-all duration-500 ${isActive ? 'text-primary' : 'text-white/20 group-hover:text-primary group-hover:scale-110'}`} />
-              {item.label}
-              {!isActive && (
-                <Sparkles className="w-3 h-3 text-primary opacity-0 group-hover:opacity-100 transition-opacity absolute right-6" />
-              )}
-            </Link>
-          );
-        })}
+        
+        <div className="space-y-1">
+          {navItems.map((item, idx) => {
+            const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex items-center gap-5 px-6 py-4 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] transition-all duration-300 relative group animate-fadeInSlideLeft
+                  ${isActive
+                    ? 'text-white bg-white/10 border border-white/10 shadow-[0_0_20px_rgba(0,136,204,0.15)]'
+                    : 'text-white/30 hover:text-white hover:bg-white/5'
+                  }`}
+                style={{ animationDelay: `${idx * 50 + 200}ms` }}
+              >
+                {isActive && (
+                  <div className="absolute left-0 w-1.5 h-6 bg-primary rounded-r-full shadow-[0_0_15px_rgba(0,136,204,0.8)] animate-pulse" />
+                )}
+                
+                <div className={`relative flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-500
+                  ${isActive ? 'bg-primary/20 shadow-lg shadow-primary/10' : 'group-hover:bg-white/5'}`}>
+                  <Icon className={`w-5 h-5 transition-all duration-500 ${isActive ? 'text-primary scale-110' : 'text-white/20 group-hover:text-primary group-hover:scale-110'}`} />
+                  {isActive && (
+                    <div className="absolute inset-0 bg-primary/20 blur-lg rounded-full animate-pulse" />
+                  )}
+                </div>
+
+                <span className="relative z-10 transition-all duration-300 group-hover:tracking-[0.3em]">
+                  {item.label}
+                </span>
+
+                {!isActive && (
+                  <Sparkles className="w-3 h-3 text-primary opacity-0 group-hover:opacity-100 transition-all duration-500 absolute right-6 group-hover:-translate-y-1" />
+                )}
+                
+                {/* Subtle hover background glow */}
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none rounded-2xl" />
+              </Link>
+            );
+          })}
+        </div>
       </nav>
 
-      {/* User Identity Section */}
-      <div className="p-8 border-t border-white/5 bg-black/50 backdrop-blur-3xl">
-        <div className="bg-white/5 rounded-[32px] p-6 border border-white/5 group hover:border-primary/30 transition-all duration-500 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 blur-2xl group-hover:bg-primary/10 transition-all" />
-          
-          <div className="flex items-center gap-5 mb-6">
-            <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center text-white text-lg font-black shadow-xl group-hover:scale-105 group-hover:border-primary/40 transition-all duration-500">
-              {user?.name?.charAt(0)?.toUpperCase() || '?'}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-black text-white truncate tracking-widest">{user?.name || 'Explorer'}</p>
-              <p className="text-[9px] font-bold text-white/20 uppercase tracking-[0.2em] truncate mt-1">Identity Verified</p>
-            </div>
-          </div>
-          
-          <button
-            onClick={logout}
-            className="flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] text-white/20 hover:text-red-500 transition-all w-full pt-5 border-t border-white/5 group/logout"
-          >
-            <LogOut className="w-4 h-4 group-hover/logout:-translate-x-1 transition-transform" />
-            De-auth
-          </button>
+      {/* Aesthetic Footer - Minimalist */}
+      <div className="p-10 border-t border-white/5 flex flex-col items-center">
+        <div className="flex gap-4 mb-4">
+          <div className="w-1.5 h-1.5 rounded-full bg-white/10" />
+          <div className="w-1.5 h-1.5 rounded-full bg-primary/40 animate-pulse" />
+          <div className="w-1.5 h-1.5 rounded-full bg-white/10" />
         </div>
+        <p className="text-[8px] font-black uppercase tracking-[0.5em] text-white/10 text-center leading-relaxed">
+          Expedition Core <br/> Registry V4.2.1
+        </p>
       </div>
     </aside>
   );
 }
+

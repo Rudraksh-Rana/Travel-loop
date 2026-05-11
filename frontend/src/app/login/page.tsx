@@ -11,10 +11,18 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
+    // Check for remembered email
+    const savedEmail = localStorage.getItem('traveloop_remembered_email');
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setRememberMe(true);
+    }
+
     if (isAuthenticated) {
       router.push('/dashboard');
     }
@@ -27,6 +35,11 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
     try {
+      if (rememberMe) {
+        localStorage.setItem('traveloop_remembered_email', email);
+      } else {
+        localStorage.removeItem('traveloop_remembered_email');
+      }
       await login(email, password);
       router.push('/dashboard');
     } catch (err: any) {
@@ -77,6 +90,8 @@ export default function LoginPage() {
                 <Mail className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
                 <input 
                   type="email" 
+                  name="email"
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full bg-white/5 border border-white/10 rounded-[20px] py-5 pl-14 pr-6 text-white outline-none focus:border-primary/50 focus:bg-white/10 transition-all text-sm font-medium"
@@ -92,6 +107,8 @@ export default function LoginPage() {
                 <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
                 <input 
                   type="password" 
+                  name="password"
+                  autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full bg-white/5 border border-white/10 rounded-[20px] py-5 pl-14 pr-6 text-white outline-none focus:border-primary/50 focus:bg-white/10 transition-all text-sm font-medium"
@@ -99,6 +116,20 @@ export default function LoginPage() {
                   required
                 />
               </div>
+            </div>
+
+            {/* Remember Me & Forgot Password */}
+            <div className="flex items-center justify-between px-2">
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <input 
+                  type="checkbox" 
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 rounded border-white/10 bg-white/5 text-primary focus:ring-primary/20 transition-all cursor-pointer"
+                />
+                <span className="text-[10px] uppercase tracking-widest font-black text-white/30 group-hover:text-white transition-colors">Remember Identity</span>
+              </label>
+              <button type="button" className="text-[10px] uppercase tracking-widest font-black text-white/20 hover:text-primary transition-colors">Forgot?</button>
             </div>
 
             <button 

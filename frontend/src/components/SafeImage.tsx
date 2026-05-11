@@ -10,7 +10,7 @@ interface SafeImageProps extends Omit<ImageProps, 'src'> {
   fallback?: string;
 }
 
-export default function SafeImage({ src, category, fallback, alt, ...props }: SafeImageProps) {
+export default function SafeImage({ src, category, fallback, alt, priority, ...props }: SafeImageProps) {
   // Determine the best initial fallback
   const defaultFallback = category ? FALLBACK_IMAGES[category] : (fallback || PLACEHOLDER_IMAGE);
   
@@ -27,6 +27,7 @@ export default function SafeImage({ src, category, fallback, alt, ...props }: Sa
       {...props}
       src={imgSrc}
       alt={alt || 'Traveloop Image'}
+      priority={priority}
       onError={() => {
         setImgSrc(defaultFallback);
       }}

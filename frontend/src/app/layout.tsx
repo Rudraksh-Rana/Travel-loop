@@ -4,8 +4,15 @@ import { AuthProvider } from '@/context/AuthContext';
 import AIConcierge from '@/components/AIConcierge';
 
 export const metadata: Metadata = {
-  title: 'Traveloop | Personalized Travel Planning',
-  description: 'Plan. Explore. Loop. — A cinematic window to India\'s most extraordinary destinations.',
+  title: {
+    default: 'Traveloop | Premium Indian Travel Planning',
+    template: '%s | Traveloop'
+  },
+  description: 'Plan. Explore. Loop. — A high-fidelity, cinematic window to India\'s most extraordinary heritage destinations and curated experiences.',
+  keywords: ['Travel India', 'Heritage Tourism', 'Luxury Travel', 'Itinerary Planner', 'Indian Culture'],
+  authors: [{ name: 'Traveloop Team' }],
+  viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
+  themeColor: '#0088CC',
 };
 
 export default function RootLayout({
@@ -14,9 +21,26 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className="antialiased">
       <head>
+        <link rel="preconnect" href="https://api.fontshare.com" />
+        <link rel="dns-prefetch" href="https://api.fontshare.com" />
         <link href="https://api.fontshare.com/v2/css?f[]=zodiak@500,700&f[]=satoshi@300,400,500&display=swap" rel="stylesheet" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  const theme = localStorage.getItem('theme');
+                  const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+                  if (theme === 'dark' || (!theme && supportDarkMode)) {
+                    document.documentElement.classList.add('dark');
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
       </head>
       <body className="bg-bg text-text font-body antialiased selection:bg-primary selection:text-white">
         <AuthProvider>

@@ -1,15 +1,16 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { 
   MapPin, Calendar, Users, ArrowRight, Star, 
   ChevronDown, ChevronRight, Menu, X, Search,
-  Compass, Globe, Heart, Bell
+  Compass, Globe, Heart, Bell, Sparkles, Navigation
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import SafeImage from '@/components/SafeImage';
+import { DarkModeToggle } from '@/components/DarkModeToggle';
 
 const heroImages = [
   'https://images.unsplash.com/photo-1524492459416-81446b1f315e?q=80&w=2000', // Taj Mahal
@@ -44,6 +45,17 @@ const expeditions = [
   },
 ];
 
+function RevealSection({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-100px" });
+
+  return (
+    <div ref={ref} className={`${className} reveal ${isInView ? 'is-visible' : ''}`}>
+      {children}
+    </div>
+  );
+}
+
 export default function Home() {
   const [currentImage, setCurrentImage] = useState(0);
   const [scrolled, setScrolled] = useState(false);
@@ -53,11 +65,11 @@ export default function Home() {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
     };
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     
     const interval = setInterval(() => {
       setCurrentImage((prev) => (prev + 1) % heroImages.length);
-    }, 7000);
+    }, 8000);
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
@@ -66,33 +78,43 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-bg text-text selection:bg-primary selection:text-white">
+    <div className="min-h-screen bg-bg text-text selection:bg-primary selection:text-white overflow-x-hidden">
       {/* Premium Navbar */}
-      <nav className={`fixed top-0 w-full z-50 transition-all duration-500 ${scrolled ? 'bg-white/80 backdrop-blur-xl py-4 border-b border-divider shadow-sm' : 'bg-transparent py-8'}`}>
+      <nav className={`fixed top-0 w-full z-50 transition-all duration-700 ${scrolled ? 'bg-white/90 dark:bg-black/90 backdrop-blur-2xl py-4 border-b border-divider shadow-xl' : 'bg-transparent py-8'}`}>
         <div className="max-w-[1400px] mx-auto px-8 flex justify-between items-center">
-          <Link href="/" className={`font-display text-2xl tracking-tighter transition-colors ${scrolled ? 'text-text' : 'text-white'}`}>
+          <Link href="/" className={`font-display text-3xl tracking-tighter transition-all flex items-center gap-2 group ${scrolled ? 'text-text' : 'text-white'}`}>
+            <Navigation className={`w-6 h-6 text-primary fill-primary transition-transform group-hover:rotate-12 ${!scrolled && 'animate-floatY'}`} />
             Travel<span className="text-primary italic">oop</span>
           </Link>
           
           {/* Desktop Nav */}
-          <div className={`hidden md:flex items-center gap-10 text-[13px] uppercase tracking-[0.2em] font-bold ${scrolled ? 'text-text' : 'text-white/90'}`}>
-            <Link href="#explore" className="hover:text-primary transition-colors pb-1 border-b-2 border-transparent hover:border-primary">Explore</Link>
-            <Link href="/search" className="hover:text-primary transition-colors pb-1 border-b-2 border-transparent hover:border-primary">Search</Link>
-            <Link href="/trips" className="hover:text-primary transition-colors pb-1 border-b-2 border-transparent hover:border-primary">Trips</Link>
-            <Link href="/profile" className="hover:text-primary transition-colors pb-1 border-b-2 border-transparent hover:border-primary">Profile</Link>
+          <div className={`hidden md:flex items-center gap-10 text-[11px] uppercase tracking-[0.3em] font-black ${scrolled ? 'text-text' : 'text-white/90'}`}>
+            {['Explore', 'Search', 'Trips', 'Profile'].map((item) => (
+              <Link 
+                key={item}
+                href={item === 'Explore' ? '#explore' : `/${item.toLowerCase()}`} 
+                className="hover:text-primary transition-all relative group py-2"
+              >
+                {item}
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full" />
+              </Link>
+            ))}
           </div>
 
-          <div className={`hidden md:flex items-center gap-6 ${scrolled ? 'text-text' : 'text-white'}`}>
-            <Heart className="w-5 h-5 cursor-pointer hover:text-primary transition-colors" />
-            <Bell className="w-5 h-5 cursor-pointer hover:text-primary transition-colors" />
-            <Link href="/login" className="bg-terracotta hover:bg-terracotta-hover text-white px-7 py-3 rounded-full text-xs uppercase tracking-widest font-bold shadow-xl shadow-terracotta/20 transition-all hover:scale-105 active:scale-95">
-              Plan Now
+          <div className={`hidden md:flex items-center gap-8 ${scrolled ? 'text-text' : 'text-white'}`}>
+            <div className="flex items-center gap-6 pr-6 border-r border-white/10">
+              <Heart className="w-5 h-5 cursor-pointer hover:text-primary hover:scale-110 transition-all" />
+              <Bell className="w-5 h-5 cursor-pointer hover:text-primary hover:scale-110 transition-all" />
+              <DarkModeToggle />
+            </div>
+            <Link href="/login" className="bg-terracotta hover:bg-terracotta-hover text-white px-8 py-3.5 rounded-full text-[10px] uppercase tracking-[0.2em] font-black shadow-2xl shadow-terracotta/20 transition-all hover:scale-105 active:scale-95 animate-pulseGlowTerra">
+              Plan Expedition
             </Link>
           </div>
 
           {/* Mobile Toggle */}
-          <button className={`md:hidden ${scrolled ? 'text-text' : 'text-white'}`} onClick={() => setMobileMenuOpen(true)}>
-            <Menu className="w-6 h-6" />
+          <button className={`md:hidden p-2 rounded-xl transition-colors ${scrolled ? 'text-text hover:bg-black/5' : 'text-white hover:bg-white/10'}`} onClick={() => setMobileMenuOpen(true)}>
+            <Menu className="w-7 h-7" />
           </button>
         </div>
       </nav>
@@ -102,93 +124,122 @@ export default function Home() {
         <AnimatePresence mode="wait">
           <motion.div
             key={currentImage}
-            initial={{ opacity: 0, scale: 1.1 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 1.05 }}
-            transition={{ duration: 1.5, ease: "easeInOut" }}
+            initial={{ opacity: 0, scale: 1.15, filter: 'blur(10px)' }}
+            animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+            exit={{ opacity: 0, scale: 1.05, filter: 'blur(10px)' }}
+            transition={{ duration: 2, ease: [0.16, 1, 0.3, 1] }}
             className="absolute inset-0 z-0"
           >
-            <div className="absolute inset-0 bg-black/30 z-10" />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60 z-10" />
             <SafeImage 
               src={heroImages[currentImage]} 
               category="hero"
               alt="Luxury India Travel" 
               fill
               unoptimized
-              className="object-cover"
+              className="object-cover animate-slowZoom"
               priority
             />
           </motion.div>
         </AnimatePresence>
 
-        <div className="relative z-20 text-center px-6 max-w-4xl mx-auto">
-          <motion.h1 
+        {/* Ambient Floating Elements */}
+        <div className="absolute inset-0 pointer-events-none z-10">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-primary/10 rounded-full blur-[100px] animate-floatY" />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-terracotta/10 rounded-full blur-[120px] animate-floatY" style={{ animationDelay: '2s' }} />
+        </div>
+
+        <div className="relative z-20 text-center px-6 max-w-5xl mx-auto">
+          <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.2 }}
-            className="font-display text-6xl md:text-8xl text-white mb-12 tracking-tight drop-shadow-2xl"
+            transition={{ duration: 1.2, delay: 0.2 }}
+            className="flex items-center justify-center gap-4 text-primary uppercase tracking-[0.6em] text-[10px] font-black mb-8"
           >
-            Unveil the <span className="italic">Majesty</span> of India
+            <div className="w-12 h-[1px] bg-primary/50" />
+            <Sparkles className="w-4 h-4" />
+            Modern Heritage of India
+            <div className="w-12 h-[1px] bg-primary/50" />
+          </motion.div>
+
+          <motion.h1 
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1.2, delay: 0.4 }}
+            className="font-display text-7xl md:text-9xl text-white mb-16 tracking-tighter leading-[0.85] text-shadow-xl"
+          >
+            Unveil the <span className="italic text-primary">Majesty</span>
           </motion.h1>
 
           {/* Elegant Search Bar */}
           <motion.div 
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.5 }}
-            className="bg-white/90 backdrop-blur-2xl rounded-2xl p-2 pl-8 flex flex-col md:flex-row items-center gap-6 shadow-2xl border border-white/20"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1, delay: 0.8 }}
+            className="bg-white/95 dark:bg-black/90 backdrop-blur-3xl rounded-[32px] p-3 flex flex-col md:flex-row items-center gap-4 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] border border-white/20"
           >
-            <div className="flex-1 flex items-center gap-4 w-full">
-              <div className="p-2 bg-primary/5 rounded-lg">
-                <MapPin className="w-5 h-5 text-primary" />
+            <div className="flex-1 flex items-center gap-6 pl-10 w-full group/input">
+              <div className="p-3 bg-primary/10 rounded-2xl group-hover/input:scale-110 transition-transform">
+                <MapPin className="w-6 h-6 text-primary" />
               </div>
-              <div className="flex flex-col items-start">
-                <span className="text-[10px] text-text-muted uppercase tracking-widest font-black mb-1">Destination</span>
-                <input type="text" placeholder="Where to go?" className="bg-transparent border-none text-text outline-none w-full placeholder:text-text-faint text-sm font-medium" />
+              <div className="flex flex-col items-start flex-1">
+                <span className="text-[10px] text-text-faint uppercase tracking-[0.3em] font-black mb-1.5">Destination</span>
+                <input type="text" placeholder="Where do you seek?" className="bg-transparent border-none text-text outline-none w-full placeholder:text-text-faint text-lg font-bold" />
               </div>
             </div>
             
-            <div className="w-px h-10 bg-divider hidden md:block" />
+            <div className="w-px h-16 bg-divider/10 hidden md:block" />
 
-            <div className="flex-1 flex items-center gap-4 w-full">
-              <div className="p-2 bg-primary/5 rounded-lg">
-                <Compass className="w-5 h-5 text-primary" />
+            <div className="flex-1 flex items-center gap-6 pl-6 w-full group/input">
+              <div className="p-3 bg-terracotta/10 rounded-2xl group-hover/input:scale-110 transition-transform">
+                <Compass className="w-6 h-6 text-terracotta" />
               </div>
-              <div className="flex flex-col items-start">
-                <span className="text-[10px] text-text-muted uppercase tracking-widest font-black mb-1">Journey Type</span>
-                <input type="text" placeholder="Cultural, Adventure..." className="bg-transparent border-none text-text outline-none w-full placeholder:text-text-faint text-sm font-medium" />
+              <div className="flex flex-col items-start flex-1">
+                <span className="text-[10px] text-text-faint uppercase tracking-[0.3em] font-black mb-1.5">Experience</span>
+                <input type="text" placeholder="Heritage, Rituals..." className="bg-transparent border-none text-text outline-none w-full placeholder:text-text-faint text-lg font-bold" />
               </div>
             </div>
 
-            <button className="w-full md:w-auto bg-primary hover:bg-primary-hover text-white px-10 py-5 rounded-xl font-bold transition-all flex items-center justify-center gap-3 shadow-xl shadow-primary/20 hover:scale-[1.02]">
-              <Search className="w-5 h-5" /> Discover
+            <button className="w-full md:w-auto bg-primary hover:bg-primary-hover text-white px-12 py-6 rounded-[24px] font-black text-xs uppercase tracking-[0.3em] transition-all flex items-center justify-center gap-4 shadow-2xl shadow-primary/30 hover:scale-[1.03] active:scale-95 group/btn">
+              Discover <ChevronRight className="w-5 h-5 group-hover/btn:translate-x-2 transition-transform" />
             </button>
           </motion.div>
         </div>
+
+        {/* Scroll Indicator */}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 2, duration: 1 }}
+          className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4"
+        >
+          <span className="text-[9px] uppercase tracking-[0.4em] font-black text-white/40">Scroll to Explore</span>
+          <div className="w-px h-12 bg-gradient-to-b from-primary to-transparent animate-floatY" />
+        </motion.div>
       </section>
 
-      {/* Heritage Bento Grid - Popular Destinations */}
-      <section className="py-32 bg-white" id="explore">
+      {/* Heritage Bento Grid */}
+      <section className="py-40 bg-white dark:bg-black" id="explore">
         <div className="max-w-[1400px] mx-auto px-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-20 gap-8">
-            <div>
-              <div className="flex items-center gap-3 text-primary uppercase tracking-[0.4em] text-[10px] font-black mb-4">
-                <div className="w-8 h-[2px] bg-primary" />
-                Featured Chronicles
+          <RevealSection className="flex flex-col md:flex-row md:items-end justify-between mb-24 gap-12">
+            <div className="max-w-2xl">
+              <div className="flex items-center gap-4 text-primary uppercase tracking-[0.5em] text-[10px] font-black mb-6">
+                <div className="w-12 h-[2px] bg-primary" />
+                Curated Chronicles
               </div>
-              <h2 className="font-display text-6xl text-text tracking-tighter">Popular <span className="italic">Destinations</span></h2>
-              <p className="text-text-muted max-w-xl text-lg font-light leading-relaxed mt-6">
-                Curated locales that blend ancient traditions with contemporary vibrancy.
+              <h2 className="font-display text-7xl md:text-8xl text-text tracking-tighter leading-[0.9]">Iconic <span className="italic text-primary">Sanctuaries</span></h2>
+              <p className="text-text-muted text-xl font-light leading-relaxed mt-10">
+                Peerless destinations that harmonize ancient architectural marvels with the pulse of modern India.
               </p>
             </div>
-            <Link href="/search" className="text-primary font-bold text-[10px] uppercase tracking-[0.3em] border-b-2 border-primary/20 pb-2 hover:border-primary transition-all">
-              Explore All Destinations
+            <Link href="/search" className="group flex items-center gap-4 text-primary font-black text-[11px] uppercase tracking-[0.4em] border-b-2 border-primary/10 pb-4 hover:border-primary transition-all">
+              Explore All Vistas <ChevronRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
             </Link>
-          </div>
+          </RevealSection>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 grid-rows-2 gap-8 h-[1000px] md:h-[800px]">
+          <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 grid-rows-2 gap-10 h-[1200px] md:h-[900px] reveal-group">
             {/* Jaipur - Large Feature */}
-            <div className="md:col-span-4 md:row-span-2 group relative rounded-[40px] overflow-hidden shadow-2xl">
+            <div className="md:col-span-4 md:row-span-2 group relative rounded-[56px] overflow-hidden shadow-[0_40px_80px_-20px_rgba(0,0,0,0.15)] animate-fadeIn">
               <SafeImage 
                 src="https://images.unsplash.com/photo-1593693397690-362ae9666ec2?q=80&w=1200" 
                 category="city"
@@ -196,45 +247,45 @@ export default function Home() {
                 fill 
                 unoptimized 
                 priority
-                className="object-cover group-hover:scale-110 transition-transform duration-[3000ms]"
+                className="object-cover group-hover:scale-110 transition-transform duration-[4000ms]"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-              <div className="absolute bottom-12 left-12 right-12">
-                <div className="flex items-center gap-3 mb-6">
-                  <span className="bg-terracotta text-white text-[10px] font-black px-4 py-2 rounded-full uppercase tracking-widest border border-white/20">
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+              <div className="absolute bottom-16 left-16 right-16">
+                <div className="flex items-center gap-4 mb-8">
+                  <span className="bg-terracotta text-white text-[10px] font-black px-6 py-2.5 rounded-full uppercase tracking-widest border border-white/20 shadow-xl shadow-terracotta/20">
                     Royal Rajasthan
                   </span>
-                  <span className="bg-white/10 backdrop-blur-xl text-white/80 text-[10px] font-bold px-4 py-2 rounded-full uppercase tracking-widest border border-white/10">
-                    Trending Now
+                  <span className="bg-white/10 backdrop-blur-2xl text-white text-[10px] font-bold px-6 py-2.5 rounded-full uppercase tracking-widest border border-white/10">
+                    <Star className="w-3.5 h-3.5 inline mr-2 text-primary fill-primary" /> Featured Vibe
                   </span>
                 </div>
-                <h3 className="font-display text-5xl text-white mb-6 leading-tight">Jaipur: The <span className="italic">Pink</span> Majesty</h3>
-                <p className="text-white/70 text-lg max-w-md font-light leading-relaxed mb-8">
-                  Experience the grandeur of Rajputana palaces and vibrant bazaars under a desert sun.
+                <h3 className="font-display text-6xl md:text-7xl text-white mb-8 tracking-tighter leading-tight">Jaipur: The <span className="italic">Cerise</span> Kingdom</h3>
+                <p className="text-white/70 text-xl max-w-xl font-light leading-relaxed mb-12">
+                  Navigate the labyrinth of pink facades, hidden stepwells, and emerald bazaars in the city of kings.
                 </p>
-                <Link href="/trips/new?city=Jaipur" className="inline-flex items-center gap-4 bg-white text-black px-10 py-5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-primary hover:text-white transition-all shadow-xl">
-                  Build Your Plan <ArrowRight className="w-4 h-4" />
+                <Link href="/trips/new?city=Jaipur" className="inline-flex items-center gap-6 bg-white text-black px-12 py-6 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-primary hover:text-white transition-all shadow-2xl group/btn">
+                  Initiate Blueprint <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-3 transition-transform" />
                 </Link>
               </div>
             </div>
 
             {/* Kerala */}
-            <div className="md:col-span-2 md:row-span-1 group relative rounded-[40px] overflow-hidden shadow-xl">
-              <SafeImage src="https://images.unsplash.com/photo-1593181629936-11c609b8db9b?q=80&w=800" category="city" alt="Kerala" fill unoptimized className="object-cover group-hover:scale-110 transition-transform duration-[2000ms]" />
-              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors" />
-              <div className="absolute bottom-8 left-8">
-                <h4 className="font-display text-2xl text-white uppercase tracking-tighter">Kerala Backwaters</h4>
-                <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest mt-2">Wellness & Nature</p>
+            <div className="md:col-span-2 md:row-span-1 group relative rounded-[48px] overflow-hidden shadow-2xl animate-fadeIn" style={{ animationDelay: '100ms' }}>
+              <SafeImage src="https://images.unsplash.com/photo-1593181629936-11c609b8db9b?q=80&w=800" category="city" alt="Kerala" fill unoptimized className="object-cover group-hover:scale-110 transition-transform duration-[3000ms]" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent group-hover:via-transparent transition-all duration-500" />
+              <div className="absolute bottom-10 left-10">
+                <h4 className="font-display text-3xl text-white tracking-tighter">Emerald <span className="italic">Waters</span></h4>
+                <p className="text-white/60 text-[10px] font-black uppercase tracking-[0.3em] mt-3">Wellness & Serenity</p>
               </div>
             </div>
 
             {/* Varanasi */}
-            <div className="md:col-span-2 md:row-span-1 group relative rounded-[40px] overflow-hidden shadow-xl">
-              <SafeImage src="https://images.unsplash.com/photo-1548013146-72479768bbaa?q=80&w=800" category="city" alt="Varanasi" fill unoptimized className="object-cover group-hover:scale-110 transition-transform duration-[2000ms]" />
-              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors" />
-              <div className="absolute bottom-8 left-8">
-                <h4 className="font-display text-2xl text-white uppercase tracking-tighter">Varanasi Eternal</h4>
-                <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest mt-2">Spiritual Heart</p>
+            <div className="md:col-span-2 md:row-span-1 group relative rounded-[48px] overflow-hidden shadow-2xl animate-fadeIn" style={{ animationDelay: '200ms' }}>
+              <SafeImage src="https://images.unsplash.com/photo-1548013146-72479768bbaa?q=80&w=800" category="city" alt="Varanasi" fill unoptimized className="object-cover group-hover:scale-110 transition-transform duration-[3000ms]" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent group-hover:via-transparent transition-all duration-500" />
+              <div className="absolute bottom-10 left-10">
+                <h4 className="font-display text-3xl text-white tracking-tighter">Eternal <span className="italic">Ghats</span></h4>
+                <p className="text-white/60 text-[10px] font-black uppercase tracking-[0.3em] mt-3">Spiritual Heart</p>
               </div>
             </div>
           </div>
@@ -242,45 +293,48 @@ export default function Home() {
       </section>
 
       {/* Bespoke Journeys Section */}
-      <section className="py-32 bg-bg border-y border-divider">
-        <div className="max-w-[1400px] mx-auto px-8 text-center mb-24">
-          <h2 className="font-display text-5xl text-text mb-4 italic">Bespoke Journeys</h2>
-          <p className="text-text-muted text-lg max-w-2xl mx-auto font-light leading-relaxed">
-            Expertly scoured journeys designed for the discerning explorer, blending luxury stays with authentic local experiences.
+      <section className="py-40 bg-bg/50 border-y border-divider/5 overflow-hidden relative">
+        {/* Decorative elements */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[150px] -mr-64 -mt-64" />
+        
+        <RevealSection className="max-w-[1400px] mx-auto px-8 text-center mb-32">
+          <div className="inline-flex items-center gap-3 text-terracotta uppercase tracking-[0.5em] text-[10px] font-black mb-8 px-6 py-2.5 bg-terracotta/5 rounded-full border border-terracotta/10">
+            <Sparkles className="w-3.5 h-3.5" /> Curated Expeditions
+          </div>
+          <h2 className="font-display text-7xl md:text-8xl text-text mb-10 tracking-tighter leading-none">Bespoke <span className="italic text-terracotta">Rituals</span></h2>
+          <p className="text-text-muted text-xl max-w-2xl mx-auto font-light leading-relaxed">
+            Expertly scoured journeys designed for the discerning explorer, blending legacy stays with authentic local rituals.
           </p>
-        </div>
+        </RevealSection>
 
-        <div className="max-w-[1400px] mx-auto px-8 grid grid-cols-1 md:grid-cols-3 gap-10">
+        <div className="max-w-[1400px] mx-auto px-8 grid grid-cols-1 md:grid-cols-3 gap-12 reveal-group">
           {expeditions.map((item, idx) => (
-            <div key={idx} className="bg-white rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all hover:-translate-y-2 group">
-              <div className="h-72 relative">
-                <SafeImage src={item.img} category="activity" alt={item.title} fill unoptimized className="object-cover group-hover:scale-110 transition-transform duration-700" />
-                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1">
-                  <Star className="w-3 h-3 text-accent-gold fill-accent-gold" /> 4.9
+            <div key={idx} className="bg-white dark:bg-surface-2 rounded-[48px] overflow-hidden shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] hover:shadow-[0_48px_80px_-20px_rgba(0,0,0,0.2)] transition-all hover:-translate-y-4 group">
+              <div className="h-80 relative overflow-hidden">
+                <SafeImage src={item.img} category="activity" alt={item.title} fill unoptimized className="object-cover group-hover:scale-110 transition-transform duration-[2000ms]" />
+                <div className="absolute top-6 right-6 bg-white/90 dark:bg-black/80 backdrop-blur-2xl px-5 py-2.5 rounded-2xl text-[11px] font-black flex items-center gap-2 border border-white shadow-xl">
+                  <Star className="w-4 h-4 text-primary fill-primary" /> 4.9
                 </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               </div>
-              <div className="p-8">
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="font-display text-2xl text-text leading-tight group-hover:text-primary transition-colors">{item.title}</h3>
-                  <span className="text-primary font-bold text-sm whitespace-nowrap">{item.duration}</span>
+              <div className="p-10">
+                <div className="flex justify-between items-start mb-6">
+                  <h3 className="font-display text-3xl text-text leading-tight group-hover:text-primary transition-colors tracking-tight">{item.title}</h3>
                 </div>
-                <p className="text-text-muted text-sm mb-6 leading-relaxed">
-                  Exclusive wildlife safari through Ranthambore and Kanha national reserves.
-                </p>
-                <div className="flex flex-wrap gap-2 mb-8">
+                <div className="flex flex-wrap gap-3 mb-10">
                   {item.tags.map(tag => (
-                    <span key={tag} className="px-3 py-1 bg-surface-2 rounded-lg text-[10px] font-bold uppercase tracking-widest text-text-muted">
+                    <span key={tag} className="px-4 py-2 bg-bg dark:bg-white/5 rounded-xl text-[10px] font-black uppercase tracking-widest text-text-faint border border-divider/10">
                       {tag}
                     </span>
                   ))}
                 </div>
-                <div className="flex items-center justify-between pt-6 border-t border-divider">
+                <div className="flex items-center justify-between pt-8 border-t border-divider/10">
                   <div>
-                    <p className="text-[10px] text-text-faint uppercase font-bold tracking-widest mb-1">Starting From</p>
-                    <p className="text-xl font-display text-text">{item.price}</p>
+                    <p className="text-[10px] text-text-faint uppercase font-black tracking-widest mb-2">Expedition Fee</p>
+                    <p className="text-3xl font-display text-text italic">{item.price}</p>
                   </div>
-                  <button className="bg-terracotta hover:bg-terracotta-hover text-white px-6 py-2.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-all">
-                    Explore Itinerary
+                  <button className="bg-terracotta hover:bg-terracotta-hover text-white p-5 rounded-2xl transition-all shadow-xl shadow-terracotta/20 group/btn">
+                    <ChevronRight className="w-6 h-6 group-hover/btn:translate-x-1 transition-transform" />
                   </button>
                 </div>
               </div>
@@ -290,95 +344,82 @@ export default function Home() {
       </section>
 
       {/* Scout Circle Section */}
-      <section className="py-32 bg-white">
+      <section className="py-40 bg-white dark:bg-black">
         <div className="max-w-[1400px] mx-auto px-8">
-          <div className="relative rounded-[40px] overflow-hidden p-16 md:p-32 text-center text-white shadow-2xl">
-            <SafeImage src="https://images.unsplash.com/photo-1544124499-58912cbddaad?q=80&w=2000" alt="Join Scout Circle" fill unoptimized className="object-cover" />
-            <div className="absolute inset-0 bg-black/60 z-10" />
+          <RevealSection className="relative rounded-[64px] overflow-hidden p-20 md:p-40 text-center text-white shadow-2xl animate-borderPulse">
+            <SafeImage src="https://images.unsplash.com/photo-1544124499-58912cbddaad?q=80&w=2000" alt="Join Scout Circle" fill unoptimized className="object-cover animate-slowZoom" />
+            <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/60 to-black/80 z-10" />
             
-            <div className="relative z-20 max-w-2xl mx-auto">
-              <h2 className="font-display text-5xl md:text-7xl mb-8">Join the Scout Circle</h2>
-              <p className="text-white/70 text-lg mb-12 font-light leading-relaxed">
-                Receive curated travel stories, exclusive heritage opening alerts, and member-only pricing delivered to your inbox.
+            <div className="relative z-20 max-w-3xl mx-auto">
+              <div className="inline-flex items-center gap-3 text-primary uppercase tracking-[0.5em] text-[11px] font-black mb-10 px-8 py-3 bg-primary/10 backdrop-blur-2xl rounded-full border border-primary/20">
+                Member Registry
+              </div>
+              <h2 className="font-display text-7xl md:text-9xl mb-12 tracking-tighter leading-[0.85]">Join the <span className="italic text-primary">Circle</span></h2>
+              <p className="text-white/60 text-xl mb-16 font-light leading-relaxed max-w-2xl mx-auto italic">
+                Secure early access to heritage openings, bespoke travel journals, and member-only pricing for the discerning soul.
               </p>
               
-              <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex flex-col md:flex-row gap-6 max-w-2xl mx-auto">
                 <input 
                   type="email" 
-                  placeholder="Your email address" 
-                  className="flex-1 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl px-8 py-5 text-white placeholder:text-white/40 focus:outline-none focus:border-primary transition-all"
+                  placeholder="Registry Email Address" 
+                  className="flex-1 bg-white/10 backdrop-blur-3xl border border-white/10 rounded-[24px] px-10 py-6 text-white placeholder:text-white/40 focus:outline-none focus:border-primary transition-all text-lg font-medium"
                 />
-                <button className="bg-[#FF9F54] hover:bg-[#FF8F34] text-black px-12 py-5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all shadow-xl shadow-[#FF9F54]/20 active:scale-95">
-                  Subscribe
+                <button className="bg-primary hover:bg-primary-hover text-white px-12 py-6 rounded-[24px] font-black text-xs uppercase tracking-[0.3em] transition-all shadow-2xl shadow-primary/30 active:scale-95">
+                  Authorize
                 </button>
               </div>
-              <p className="mt-6 text-white/30 text-[10px] font-bold uppercase tracking-widest">
-                We respect your privacy. Unsubscribe at any time.
+              <p className="mt-10 text-white/30 text-[10px] font-black uppercase tracking-[0.4em]">
+                Bespoke Updates Only • No Ad-hoc Traffic
               </p>
             </div>
-          </div>
+          </RevealSection>
         </div>
       </section>
 
       {/* High-Fidelity Footer */}
-      <footer className="bg-[#1A1A1A] text-white pt-24 pb-12">
-        <div className="max-w-[1400px] mx-auto px-8 grid grid-cols-1 md:grid-cols-12 gap-16 mb-24">
+      <footer className="bg-black text-white pt-32 pb-16">
+        <div className="max-w-[1400px] mx-auto px-8 grid grid-cols-1 md:grid-cols-12 gap-20 mb-32">
           <div className="md:col-span-4">
-            <Link href="/" className="font-display text-4xl tracking-tighter mb-8 block">
-              Travel<span className="text-primary italic">oop</span>
+            <Link href="/" className="font-display text-5xl tracking-tighter mb-12 block group">
+              Travel<span className="text-primary italic transition-all group-hover:pl-2">oop</span>
             </Link>
-            <p className="text-white/40 text-sm leading-relaxed mb-8 max-w-sm">
-              Crafting bespoke journeys through the soul of India since 2012. Our mission is to reconnect discerning travelers with authentic heritage and hidden gems.
+            <p className="text-white/40 text-base leading-relaxed mb-12 max-w-sm font-light italic">
+              Crafting bespoke chronicles through the soul of India since 2012. Reconnecting discerning explorers with authentic heritage.
             </p>
-            <div className="flex gap-6">
-              <Globe className="w-5 h-5 text-white/20 hover:text-white cursor-pointer transition-colors" />
-              <Search className="w-5 h-5 text-white/20 hover:text-white cursor-pointer transition-colors" />
-              <Bell className="w-5 h-5 text-white/20 hover:text-white cursor-pointer transition-colors" />
+            <div className="flex gap-8">
+              {[Globe, Search, Bell].map((Icon, idx) => (
+                <Icon key={idx} className="w-6 h-6 text-white/20 hover:text-primary cursor-pointer transition-all hover:scale-120" />
+              ))}
             </div>
           </div>
 
-          <div className="md:col-span-2">
-            <h5 className="font-bold text-xs uppercase tracking-[0.2em] mb-8 text-white/60">About Us</h5>
-            <ul className="space-y-4 text-sm font-medium text-white/40">
-              <li className="hover:text-white transition-colors cursor-pointer">Our Story</li>
-              <li className="hover:text-white transition-colors cursor-pointer">Sustainability</li>
-              <li className="hover:text-white transition-colors cursor-pointer">Travel Journal</li>
-              <li className="hover:text-white transition-colors cursor-pointer">Careers</li>
-            </ul>
-          </div>
-
-          <div className="md:col-span-2">
-            <h5 className="font-bold text-xs uppercase tracking-[0.2em] mb-8 text-white/60">Destinations</h5>
-            <ul className="space-y-4 text-sm font-medium text-white/40">
-              <li className="hover:text-white transition-colors cursor-pointer">North India</li>
-              <li className="hover:text-white transition-colors cursor-pointer">South India</li>
-              <li className="hover:text-white transition-colors cursor-pointer">East India</li>
-              <li className="hover:text-white transition-colors cursor-pointer">West India</li>
-            </ul>
-          </div>
-
-          <div className="md:col-span-2">
-            <h5 className="font-bold text-xs uppercase tracking-[0.2em] mb-8 text-white/60">Travel Guides</h5>
-            <ul className="space-y-4 text-sm font-medium text-white/40">
-              <li className="hover:text-white transition-colors cursor-pointer">Cultural Etiquette</li>
-              <li className="hover:text-white transition-colors cursor-pointer">Visa Info</li>
-              <li className="hover:text-white transition-colors cursor-pointer">Weather Guide</li>
-              <li className="hover:text-white transition-colors cursor-pointer">Packing List</li>
-            </ul>
-          </div>
-
-          <div className="md:col-span-2">
-            <h5 className="font-bold text-xs uppercase tracking-[0.2em] mb-8 text-white/60">Legal</h5>
-            <ul className="space-y-4 text-sm font-medium text-white/40">
-              <li className="hover:text-white transition-colors cursor-pointer">Privacy Policy</li>
-              <li className="hover:text-white transition-colors cursor-pointer">Terms of Service</li>
-              <li className="hover:text-white transition-colors cursor-pointer">Cookie Policy</li>
-            </ul>
-          </div>
+          {[
+            { title: 'Philosophy', items: ['Our Story', 'Bespoke', 'Journal', 'Careers'] },
+            { title: 'Sectors', items: ['North', 'South', 'East', 'West'] },
+            { title: 'Protocols', items: ['Etiquette', 'Visa', 'Climate', 'Registry'] },
+            { title: 'Legals', items: ['Privacy', 'Terms', 'Security'] }
+          ].map((col, idx) => (
+            <div key={idx} className="md:col-span-2">
+              <h5 className="font-black text-[10px] uppercase tracking-[0.4em] mb-12 text-white/20">{col.title}</h5>
+              <ul className="space-y-6 text-sm font-bold text-white/40 uppercase tracking-[0.1em]">
+                {col.items.map(item => (
+                  <li key={item} className="hover:text-primary transition-all cursor-pointer flex items-center gap-2 group">
+                    <span className="w-0 h-px bg-primary transition-all group-hover:w-4" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
 
-        <div className="max-w-[1400px] mx-auto px-8 pt-12 border-t border-white/5 flex flex-col md:flex-row justify-center items-center text-[10px] uppercase tracking-[0.3em] font-black text-white/20">
-          <p>© 2026 Traveloop. Modern Heritage of India.</p>
+        <div className="max-w-[1400px] mx-auto px-8 pt-16 border-t border-white/5 flex flex-col md:flex-row justify-between items-center text-[10px] uppercase tracking-[0.5em] font-black text-white/10">
+          <p>© 2026 Traveloop. Digital Heritage Prototype.</p>
+          <div className="flex gap-10 mt-8 md:mt-0">
+            <span className="hover:text-white transition-colors cursor-pointer">Encryption Level: 256-bit</span>
+            <span className="hover:text-white transition-colors cursor-pointer">Protocol: v4.2.0</span>
+          </div>
         </div>
       </footer>
 
@@ -389,23 +430,30 @@ export default function Home() {
             initial={{ opacity: 0, x: '100%' }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: '100%' }}
-            className="fixed inset-0 z-[100] bg-white flex flex-col p-10"
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="fixed inset-0 z-[100] bg-black flex flex-col p-12"
           >
-            <div className="flex justify-between items-center mb-20">
-              <div className="font-display text-2xl text-text tracking-tighter">Travel<span className="text-primary italic">oop</span></div>
-              <button onClick={() => setMobileMenuOpen(false)} className="p-2 text-text">
+            <div className="flex justify-between items-center mb-24">
+              <div className="font-display text-3xl text-white tracking-tighter">Travel<span className="text-primary italic">oop</span></div>
+              <button onClick={() => setMobileMenuOpen(false)} className="p-3 bg-white/5 rounded-2xl text-white hover:bg-white/10 transition-colors">
                 <X className="w-8 h-8" />
               </button>
             </div>
-            <div className="flex flex-col gap-10 font-display text-5xl">
-              <Link href="#explore" onClick={() => setMobileMenuOpen(false)}>Explore</Link>
-              <Link href="/search" onClick={() => setMobileMenuOpen(false)}>Search</Link>
-              <Link href="/trips" onClick={() => setMobileMenuOpen(false)}>My Trips</Link>
-              <Link href="/profile" onClick={() => setMobileMenuOpen(false)}>Identity</Link>
+            <div className="flex flex-col gap-12 font-display text-6xl text-white">
+              {['Explore', 'Search', 'Trips', 'Identity'].map((item, idx) => (
+                <Link 
+                  key={item}
+                  href={item === 'Explore' ? '#explore' : `/${item.toLowerCase()}`} 
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="hover:text-primary transition-all hover:pl-6"
+                >
+                  {item}
+                </Link>
+              ))}
             </div>
-            <div className="mt-auto flex flex-col gap-6">
-              <Link href="/login" className="bg-primary text-white text-center py-6 rounded-2xl font-black text-sm uppercase tracking-widest shadow-2xl shadow-primary/20">
-                Plan Now
+            <div className="mt-auto flex flex-col gap-8">
+              <Link href="/login" className="bg-primary text-white text-center py-8 rounded-[28px] font-black text-sm uppercase tracking-[0.4em] shadow-2xl shadow-primary/30 active:scale-95">
+                Initiate Plan
               </Link>
             </div>
           </motion.div>
@@ -414,3 +462,4 @@ export default function Home() {
     </div>
   );
 }
+
