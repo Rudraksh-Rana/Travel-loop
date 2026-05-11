@@ -232,7 +232,7 @@ export default function Home() {
                 Peerless destinations that harmonize ancient architectural marvels with the pulse of modern India.
               </p>
             </div>
-            <Link href="/search" className="group flex items-center gap-4 text-primary font-black text-[11px] uppercase tracking-[0.4em] border-b-2 border-primary/10 pb-4 hover:border-primary transition-all">
+            <Link href="/discovery" className="group flex items-center gap-4 text-primary font-black text-[11px] uppercase tracking-[0.4em] border-b-2 border-primary/10 pb-4 hover:border-primary transition-all">
               Explore All Vistas <ChevronRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
             </Link>
           </RevealSection>

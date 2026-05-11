@@ -12,7 +12,7 @@ const navItems = [
   { label: 'Chronicle', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Expeditions', href: '/trips', icon: Map },
   { label: 'New Journey', href: '/trips/new', icon: PlusCircle },
-  { label: 'Discovery', href: '/search', icon: Search },
+  { label: 'Discovery', href: '/discovery', icon: Search },
   { label: 'Circle', href: '/community', icon: Users },
   { label: 'Identity', href: '/profile', icon: User },
 ];

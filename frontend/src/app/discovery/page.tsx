@@ -13,7 +13,7 @@ import Link from 'next/link';
 import SafeImage from '@/components/SafeImage';
 import AuthGuard from '@/components/AuthGuard';
 
-export default function SearchPage() {
+export default function DiscoveryPage() {
   const [query, setQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'destinations' | 'activities'>('destinations');
   const [results, setResults] = useState<any[]>([]);
@@ -81,7 +81,7 @@ export default function SearchPage() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder={`Scour for ${activeTab === 'destinations' ? 'cities, states, or heritage regions' : 'heritage walks, safaris, or ancient rituals'}...`}
-                  className="w-full py-5 bg-transparent text-white outline-none placeholder:text-white/20 text-xl font-medium tracking-tight"
+                  className="w-full py-5 bg-transparent text-white outline-none placeholder:text-white/40 text-xl font-medium tracking-tight"
                 />
               </div>
               

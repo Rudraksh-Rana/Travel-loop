@@ -211,7 +211,7 @@ export default function DashboardPage() {
               <section>
                 <div className="flex items-center justify-between mb-10">
                   <h2 className="font-display text-4xl text-white italic">Suggested Destinations</h2>
-                  <Link href="/search" className="text-white/40 hover:text-white text-[10px] uppercase tracking-[0.3em] font-black flex items-center gap-3 transition-all group">
+                  <Link href="/discovery" className="text-white/40 hover:text-white text-[10px] uppercase tracking-[0.3em] font-black flex items-center gap-3 transition-all group">
                     Explore Global Map <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
                   </Link>
                 </div>

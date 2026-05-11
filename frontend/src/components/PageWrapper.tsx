@@ -34,7 +34,7 @@ export default function PageWrapper({ children }: { children: ReactNode }) {
 const mobileNavItems = [
   { href: '/dashboard', label: 'Home',    icon: LayoutDashboard },
   { href: '/trips',     label: 'Trips',   icon: Map },
-  { href: '/search',    label: 'Search',  icon: Search },
+  { href: '/discovery', label: 'Search',  icon: Search },
   { href: '/profile',   label: 'Profile', icon: User },
 ];
 

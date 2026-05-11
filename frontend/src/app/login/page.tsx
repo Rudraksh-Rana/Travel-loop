@@ -94,7 +94,7 @@ export default function LoginPage() {
                   autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-[20px] py-5 pl-14 pr-6 text-white outline-none focus:border-primary/50 focus:bg-white/10 transition-all text-sm font-medium"
+                  className="w-full bg-white/10 border border-white/20 rounded-[20px] py-5 pl-14 pr-6 text-white outline-none focus:border-primary/50 focus:bg-white/15 transition-all text-sm font-medium placeholder:text-white/40"
                   placeholder="explorer@traveloop.com"
                   required
                 />
@@ -111,7 +111,7 @@ export default function LoginPage() {
                   autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-[20px] py-5 pl-14 pr-6 text-white outline-none focus:border-primary/50 focus:bg-white/10 transition-all text-sm font-medium"
+                  className="w-full bg-white/10 border border-white/20 rounded-[20px] py-5 pl-14 pr-6 text-white outline-none focus:border-primary/50 focus:bg-white/15 transition-all text-sm font-medium placeholder:text-white/40"
                   placeholder="••••••••"
                   required
                 />
