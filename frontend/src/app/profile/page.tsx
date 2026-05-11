@@ -222,7 +222,13 @@ export default function ProfilePage() {
   );
 }
 
-function ProfileLink({ icon: Icon, label, sub }: any) {
+interface ProfileLinkProps {
+  icon: React.ElementType;
+  label: string;
+  sub: string;
+}
+
+function ProfileLink({ icon: Icon, label, sub }: ProfileLinkProps) {
   return (
     <button className="w-full flex items-center justify-between p-6 rounded-2xl hover:bg-white/5 transition-all group">
       <div className="flex items-center gap-4">
@@ -238,7 +244,17 @@ function ProfileLink({ icon: Icon, label, sub }: any) {
   );
 }
 
-function ProfileField({ label, value, editing, onChange, icon: Icon, placeholder, isTextArea }: any) {
+interface ProfileFieldProps {
+  label: string;
+  value: string;
+  editing: boolean;
+  onChange?: (v: string) => void;
+  icon: React.ElementType;
+  placeholder?: string;
+  isTextArea?: boolean;
+}
+
+function ProfileField({ label, value, editing, onChange, icon: Icon, placeholder, isTextArea }: ProfileFieldProps) {
   return (
     <div className="space-y-3">
       <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-2 flex items-center gap-2">
@@ -248,7 +264,7 @@ function ProfileField({ label, value, editing, onChange, icon: Icon, placeholder
         isTextArea ? (
           <textarea 
             value={value} 
-            onChange={e => onChange(e.target.value)}
+            onChange={e => onChange?.(e.target.value)}
             placeholder={placeholder}
             rows={4}
             className="w-full px-6 py-5 bg-white/5 border border-white/10 rounded-2xl text-white placeholder:text-white/20 focus:outline-none focus:border-primary/50 transition-all text-sm font-medium resize-none"
@@ -257,7 +273,7 @@ function ProfileField({ label, value, editing, onChange, icon: Icon, placeholder
           <input 
             type="text" 
             value={value} 
-            onChange={e => onChange(e.target.value)}
+            onChange={e => onChange?.(e.target.value)}
             placeholder={placeholder}
             className="w-full px-6 py-5 bg-white/5 border border-white/10 rounded-2xl text-white placeholder:text-white/20 focus:outline-none focus:border-primary/50 transition-all text-sm font-medium"
           />
