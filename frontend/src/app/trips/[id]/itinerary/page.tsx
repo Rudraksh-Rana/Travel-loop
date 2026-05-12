@@ -100,7 +100,7 @@ export default function ItineraryPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-black/95 via-black/40 to-black/90" />
       </div>
 
-      <div className="max-w-[1200px] mx-auto relative z-10 text-white min-h-[calc(100vh-4rem)] pt-8 pb-20 animate-fadeIn">
+      <div className="relative z-10 text-white min-h-screen pt-8 pb-20 animate-fadeIn">
         
         {/* Navigation & Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-10 mb-16">

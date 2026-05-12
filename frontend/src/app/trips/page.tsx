@@ -108,7 +108,7 @@ export default function TripsListPage() {
             <Compass className="w-24 h-24 text-white/10 mx-auto mb-8 group-hover:text-primary group-hover:rotate-45 transition-all duration-1000" />
             <h3 className="font-display text-4xl text-white mb-4 italic">The map is silent</h3>
             <p className="text-white/40 text-lg mb-12 font-light">Your chronicle awaits its next extraordinary chapter.</p>
-            <Link href="/search" className="btn-primary inline-flex items-center gap-4 px-10 py-5">
+            <Link href="/discovery" className="btn-primary inline-flex items-center gap-4 px-10 py-5">
               Explore Destinations <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
