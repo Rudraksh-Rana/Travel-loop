@@ -60,6 +60,8 @@ export default function Home() {
   const [currentImage, setCurrentImage] = useState(0);
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeSearchTab, setActiveSearchTab] = useState('tours');
+  const [hoveredSearchSegment, setHoveredSearchSegment] = useState<string | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -171,38 +173,92 @@ export default function Home() {
             Unveil the <span className="italic text-primary">Majesty</span>
           </motion.h1>
 
-          {/* Elegant Search Bar */}
+          {/* Interactive Dribbble-inspired Search Bar */}
           <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.8 }}
-            className="bg-white/95 dark:bg-black/90 backdrop-blur-3xl rounded-[32px] p-3 flex flex-col md:flex-row items-center gap-4 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] border border-white/20"
+            className="mx-auto w-full max-w-4xl"
           >
-            <div className="flex-1 flex items-center gap-6 pl-10 w-full group/input">
-              <div className="p-3 bg-primary/10 rounded-2xl group-hover/input:scale-110 transition-transform">
-                <MapPin className="w-6 h-6 text-primary" />
-              </div>
-              <div className="flex flex-col items-start flex-1">
-                <span className="text-[10px] text-text-faint uppercase tracking-[0.3em] font-black mb-1.5">Destination</span>
-                <input type="text" placeholder="Where do you seek?" className="bg-transparent border-none text-text outline-none w-full placeholder:text-text-faint text-lg font-bold" />
-              </div>
-            </div>
-            
-            <div className="w-px h-16 bg-divider/10 hidden md:block" />
-
-            <div className="flex-1 flex items-center gap-6 pl-6 w-full group/input">
-              <div className="p-3 bg-terracotta/10 rounded-2xl group-hover/input:scale-110 transition-transform">
-                <Compass className="w-6 h-6 text-terracotta" />
-              </div>
-              <div className="flex flex-col items-start flex-1">
-                <span className="text-[10px] text-text-faint uppercase tracking-[0.3em] font-black mb-1.5">Experience</span>
-                <input type="text" placeholder="Heritage, Rituals..." className="bg-transparent border-none text-text outline-none w-full placeholder:text-text-faint text-lg font-bold" />
-              </div>
+            {/* Tabs */}
+            <div className="flex items-center gap-2 mb-4 ml-8 relative z-10">
+              {['tours', 'hotels', 'flights'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveSearchTab(tab)}
+                  className={`px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-[0.2em] transition-all duration-300 ${
+                    activeSearchTab === tab 
+                      ? 'bg-white text-black shadow-lg' 
+                      : 'bg-black/30 text-white backdrop-blur-md hover:bg-black/50 border border-white/10'
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
             </div>
 
-            <button className="w-full md:w-auto bg-primary hover:bg-primary-hover text-white px-12 py-6 rounded-[24px] font-black text-xs uppercase tracking-[0.3em] transition-all flex items-center justify-center gap-4 shadow-2xl shadow-primary/30 hover:scale-[1.03] active:scale-95 group/btn">
-              Discover <ChevronRight className="w-5 h-5 group-hover/btn:translate-x-2 transition-transform" />
-            </button>
+            {/* Main Search Container */}
+            <div className="bg-white dark:bg-surface-2 rounded-full p-2 flex flex-col md:flex-row items-center gap-1 shadow-2xl relative">
+              {/* Location Segment */}
+              <div 
+                onMouseEnter={() => setHoveredSearchSegment('location')}
+                onMouseLeave={() => setHoveredSearchSegment(null)}
+                className={`flex-1 flex items-center gap-4 pl-8 py-4 rounded-full transition-all duration-300 cursor-text ${
+                  hoveredSearchSegment === 'location' ? 'bg-black/5 dark:bg-white/5' : ''
+                }`}
+              >
+                <div className="p-2 bg-primary/10 rounded-full">
+                  <MapPin className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex flex-col items-start w-full">
+                  <span className="text-[9px] text-text-faint uppercase tracking-[0.2em] font-black mb-1">Location</span>
+                  <input type="text" placeholder="Where are you going?" className="bg-transparent border-none text-text outline-none w-full placeholder:text-text-muted text-sm font-bold" />
+                </div>
+              </div>
+              
+              <div className="w-px h-10 bg-divider/40 hidden md:block" />
+
+              {/* Date Segment */}
+              <div 
+                onMouseEnter={() => setHoveredSearchSegment('date')}
+                onMouseLeave={() => setHoveredSearchSegment(null)}
+                className={`flex-1 flex items-center gap-4 pl-6 py-4 rounded-full transition-all duration-300 cursor-pointer ${
+                  hoveredSearchSegment === 'date' ? 'bg-black/5 dark:bg-white/5' : ''
+                }`}
+              >
+                <div className="p-2 bg-terracotta/10 rounded-full">
+                  <Calendar className="w-5 h-5 text-terracotta" />
+                </div>
+                <div className="flex flex-col items-start w-full">
+                  <span className="text-[9px] text-text-faint uppercase tracking-[0.2em] font-black mb-1">Dates</span>
+                  <span className="text-text text-sm font-bold truncate">Select dates</span>
+                </div>
+              </div>
+
+              <div className="w-px h-10 bg-divider/40 hidden md:block" />
+
+              {/* Guests Segment */}
+              <div 
+                onMouseEnter={() => setHoveredSearchSegment('guests')}
+                onMouseLeave={() => setHoveredSearchSegment(null)}
+                className={`flex-1 flex items-center gap-4 pl-6 py-4 pr-2 rounded-full transition-all duration-300 cursor-pointer ${
+                  hoveredSearchSegment === 'guests' ? 'bg-black/5 dark:bg-white/5' : ''
+                }`}
+              >
+                <div className="p-2 bg-accent-gold/10 rounded-full">
+                  <Users className="w-5 h-5 text-accent-gold" />
+                </div>
+                <div className="flex flex-col items-start w-full">
+                  <span className="text-[9px] text-text-faint uppercase tracking-[0.2em] font-black mb-1">Guests</span>
+                  <span className="text-text text-sm font-bold truncate">Add guests</span>
+                </div>
+                
+                {/* Search Button */}
+                <button className="bg-primary hover:bg-primary-hover text-white p-5 rounded-full transition-all hover:scale-105 active:scale-95 shadow-xl shadow-primary/30 flex-shrink-0 ml-2 group/search">
+                  <Search className="w-5 h-5 group-hover/search:rotate-12 transition-transform" />
+                </button>
+              </div>
+            </div>
           </motion.div>
         </div>
 
@@ -259,13 +315,15 @@ export default function Home() {
                     <Star className="w-3.5 h-3.5 inline mr-2 text-primary fill-primary" /> Featured Vibe
                   </span>
                 </div>
-                <h3 className="font-display text-6xl md:text-7xl text-white mb-8 tracking-tighter leading-tight">Jaipur: The <span className="italic">Cerise</span> Kingdom</h3>
-                <p className="text-white/70 text-xl max-w-xl font-light leading-relaxed mb-12">
+                <h3 className="font-display text-6xl md:text-7xl text-white mb-8 tracking-tighter leading-tight group-hover:-translate-y-2 transition-transform duration-500">Jaipur: The <span className="italic">Cerise</span> Kingdom</h3>
+                <p className="text-white/70 text-xl max-w-xl font-light leading-relaxed mb-12 opacity-0 -translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-700">
                   Navigate the labyrinth of pink facades, hidden stepwells, and emerald bazaars in the city of kings.
                 </p>
-                <Link href="/trips/new?city=Jaipur" className="inline-flex items-center gap-6 bg-white text-black px-12 py-6 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-primary hover:text-white transition-all shadow-2xl group/btn">
-                  Initiate Blueprint <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-3 transition-transform" />
-                </Link>
+                <div className="overflow-hidden">
+                  <Link href="/trips/new?city=Jaipur" className="inline-flex items-center gap-6 bg-white/10 backdrop-blur-md border border-white/20 text-white px-10 py-5 rounded-full font-black text-xs uppercase tracking-[0.2em] hover:bg-white hover:text-black transition-all shadow-2xl group/btn translate-y-12 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 duration-500 delay-100">
+                    Initiate Blueprint <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-3 transition-transform" />
+                  </Link>
+                </div>
               </div>
             </div>
 
@@ -282,10 +340,15 @@ export default function Home() {
             {/* Varanasi */}
             <div className="md:col-span-2 md:row-span-1 group relative rounded-[48px] overflow-hidden shadow-2xl animate-fadeIn" style={{ animationDelay: '200ms' }}>
               <SafeImage src="https://images.unsplash.com/photo-1548013146-72479768bbaa?q=80&w=800" category="city" alt="Varanasi" fill unoptimized className="object-cover group-hover:scale-110 transition-transform duration-[3000ms]" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent group-hover:via-transparent transition-all duration-500" />
-              <div className="absolute bottom-10 left-10">
-                <h4 className="font-display text-3xl text-white tracking-tighter">Eternal <span className="italic">Ghats</span></h4>
-                <p className="text-white/60 text-[10px] font-black uppercase tracking-[0.3em] mt-3">Spiritual Heart</p>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent group-hover:via-transparent group-hover:bg-black/40 transition-all duration-500" />
+              <div className="absolute bottom-10 left-10 right-10">
+                <h4 className="font-display text-3xl text-white tracking-tighter group-hover:-translate-y-2 transition-transform duration-300">Eternal <span className="italic">Ghats</span></h4>
+                <div className="flex justify-between items-center mt-3 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+                  <p className="text-white/80 text-[10px] font-black uppercase tracking-[0.3em]">Spiritual Heart</p>
+                  <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
+                    <ArrowRight className="w-4 h-4 text-black" />
+                  </div>
+                </div>
               </div>
             </div>
           </div>

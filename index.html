@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Route Planner</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <!-- Google Fonts for typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-color: #f8fafc;
+            --surface-color: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Layout */
+        .app-container {
+            display: flex;
+            flex: 1;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 400px;
+            background-color: var(--surface-color);
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        /* Header */
+        .sidebar-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--primary-color);
+        }
+
+        /* Search Form */
+        .search-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .input-group label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .input-group input {
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .input-group input:focus {
+            border-color: var(--primary-color);
+        }
+
+        .btn-search {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 8px;
+        }
+
+        .btn-search:hover {
+            background-color: var(--primary-hover);
+        }
+        
+        .btn-search:disabled {
+            background-color: var(--text-secondary);
+            cursor: not-allowed;
+        }
+
+        /* Tabs */
+        .tabs-container {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 16px 0;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+            color: var(--primary-color);
+        }
+
+        .tab-btn.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        /* Tab Content */
+        .tab-content {
+            padding: 24px;
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .results-card {
+            background-color: var(--bg-color);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .results-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .results-detail {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+        
+        .price-badge {
+            background-color: #e0e7ff;
+            color: var(--primary-color);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        /* Map */
+        .map-container {
+            flex: 1;
+            position: relative;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Loading Overlay */
+        #loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border-left-color: var(--primary-color);
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column-reverse;
+            }
+            .sidebar {
+                width: 100%;
+                height: 50vh;
+                box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            }
+            .map-container {
+                height: 50vh;
+            }
+        }
+        
+        /* Custom Marker CSS */
+        .custom-marker {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: transparent;
+            border: none;
+        }
+        .marker-pin {
+            width: 30px;
+            height: 30px;
+            border-radius: 50% 50% 50% 0;
+            background: var(--primary-color);
+            position: absolute;
+            transform: rotate(-45deg);
+            left: 50%;
+            top: 50%;
+            margin: -15px 0 0 -15px;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.2);
+        }
+        .marker-pin::after {
+            content: '';
+            width: 14px;
+            height: 14px;
+            margin: 8px 0 0 8px;
+            background: #fff;
+            position: absolute;
+            border-radius: 50%;
+        }
+        .marker-green .marker-pin { background: var(--success-color); }
+        .marker-red .marker-pin { background: var(--danger-color); }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Sidebar Control Panel -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h1>Travel Planner</h1>
+                <div class="search-form">
+                    <div class="input-group">
+                        <label for="boarding">Boarding Place</label>
+                        <input type="text" id="boarding" placeholder="e.g. New York, NY" value="London, UK">
+                    </div>
+                    <div class="input-group">
+                        <label for="destination">Destination</label>
+                        <input type="text" id="destination" placeholder="e.g. Los Angeles, CA" value="Paris, France">
+                    </div>
+                    <button id="search-btn" class="btn-search">Search Routes</button>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs-container">
+                <button class="tab-btn active" data-tab="driving">Driving / Direct</button>
+                <button class="tab-btn" data-tab="flights">Flights</button>
+                <button class="tab-btn" data-tab="trains">Trains</button>
+            </div>
+
+            <!-- Tab Contents -->
+            <div id="driving-tab" class="tab-content active">
+                <div id="driving-results">
+                    <p class="text-secondary" style="color: var(--text-secondary);">Enter a boarding place and destination to see route details.</p>
+                </div>
+            </div>
+
+            <div id="flights-tab" class="tab-content">
+                <div id="flights-results">
+                    <p class="text-secondary" style="color: var(--text-secondary);">Enter locations to search for flights.</p>
+                </div>
+            </div>
+
+            <div id="trains-tab" class="tab-content">
+                <div id="trains-results">
+                    <p class="text-secondary" style="color: var(--text-secondary);">Enter locations to search for train routes.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Full-screen Map -->
+        <div class="map-container">
+            <div id="loading-overlay">
+                <div class="spinner"></div>
+            </div>
+            <div id="map"></div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <!-- Turf.js for drawing curved flight paths -->
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+
+    <script>
+        // --- MAP INITIALIZATION ---
+        // Initialize the map and set default view to world level
+        const map = L.map('map').setView([20, 0], 2);
+
+        // Add OpenStreetMap tiles (Free, open-source)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Layer group to hold current route markers and lines so we can clear them easily
+        const routeLayer = L.layerGroup().addTo(map);
+
+        // Custom Marker Icons
+        const createCustomIcon = (colorClass) => {
+            return L.divIcon({
+                className: `custom-marker marker-${colorClass}`,
+                html: `<div class="marker-pin"></div>`,
+                iconSize: [30, 42],
+                iconAnchor: [15, 42],
+                popupAnchor: [0, -35]
+            });
+        };
+        const greenIcon = createCustomIcon('green');
+        const redIcon = createCustomIcon('red');
+
+
+        // --- UI LOGIC ---
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const searchBtn = document.getElementById('search-btn');
+        const boardingInput = document.getElementById('boarding');
+        const destinationInput = document.getElementById('destination');
+        const loadingOverlay = document.getElementById('loading-overlay');
+
+        // Tab Switching Logic
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Remove active class from all
+                tabBtns.forEach(b => b.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+                
+                // Add active to clicked
+                btn.classList.add('active');
+                document.getElementById(`${btn.dataset.tab}-tab`).classList.add('active');
+            });
+        });
+
+        // --- CORE ROUTING LOGIC ---
+        searchBtn.addEventListener('click', async () => {
+            const boardingStr = boardingInput.value.trim();
+            const destinationStr = destinationInput.value.trim();
+
+            if (!boardingStr || !destinationStr) {
+                alert("Please enter both Boarding Place and Destination.");
+                return;
+            }
+
+            setLoading(true);
+            routeLayer.clearLayers(); // Clear previous search results on map
+
+            try {
+                // 1. Geocoding
+                const boardingCoord = await geocode(boardingStr);
+                const destinationCoord = await geocode(destinationStr);
+
+                if (!boardingCoord || !destinationCoord) {
+                    throw new Error("Could not find coordinates for one or both locations.");
+                }
+
+                // 2. Map Interactivity
+                // Place Markers
+                L.marker([boardingCoord.lat, boardingCoord.lon], {icon: greenIcon})
+                    .bindPopup(`<b>Boarding:</b> ${boardingCoord.display_name}`)
+                    .addTo(routeLayer);
+                
+                L.marker([destinationCoord.lat, destinationCoord.lon], {icon: redIcon})
+                    .bindPopup(`<b>Destination:</b> ${destinationCoord.display_name}`)
+                    .addTo(routeLayer);
+
+                // Draw Direct Polyline (Blue)
+                const latlngs = [
+                    [boardingCoord.lat, boardingCoord.lon],
+                    [destinationCoord.lat, destinationCoord.lon]
+                ];
+                L.polyline(latlngs, {color: '#2563eb', weight: 4, opacity: 0.8}).addTo(routeLayer);
+
+                // Center and Zoom Map
+                const bounds = L.latLngBounds(latlngs);
+                map.fitBounds(bounds, { padding: [50, 50] });
+
+                // 3. Distance Calculation & UI Updates
+                const distanceKm = calculateLeafletDistance(boardingCoord, destinationCoord);
+                updateDrivingUI(distanceKm, boardingCoord.display_name, destinationCoord.display_name);
+
+                // 4. Fetch Mock APIs and Update UI
+                await fetchAndDisplayFlights(boardingCoord, destinationCoord);
+                await fetchAndDisplayTrains(boardingCoord, destinationCoord);
+
+            } catch (error) {
+                alert("Error: " + error.message);
+                console.error(error);
+            } finally {
+                setLoading(false);
+            }
+        });
+
+
+        // --- HELPER FUNCTIONS & API MOCKS ---
+
+        function setLoading(isLoading) {
+            loadingOverlay.style.display = isLoading ? 'flex' : 'none';
+            searchBtn.disabled = isLoading;
+            searchBtn.textContent = isLoading ? 'Searching...' : 'Search Routes';
+        }
+
+        // Geocoding using free OpenStreetMap Nominatim API
+        async function geocode(query) {
+            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`;
+            const response = await fetch(url);
+            const data = await response.json();
+            if (data && data.length > 0) {
+                return {
+                    lat: parseFloat(data[0].lat),
+                    lon: parseFloat(data[0].lon),
+                    display_name: data[0].display_name.split(',')[0] // Shorten name
+                };
+            }
+            return null;
+        }
+
+        // Leaflet built-in distance logic
+        function calculateLeafletDistance(coord1, coord2) {
+            const p1 = L.latLng(coord1.lat, coord1.lon);
+            const p2 = L.latLng(coord2.lat, coord2.lon);
+            const distanceMeters = p1.distanceTo(p2);
+            return (distanceMeters / 1000).toFixed(1); // Convert to km
+        }
+
+        function updateDrivingUI(distanceKm, from, to) {
+            const container = document.getElementById('driving-results');
+            const estHours = (distanceKm / 80).toFixed(1); // Rough estimate 80km/h
+            container.innerHTML = `
+                <div class="results-card">
+                    <div class="results-title">
+                        <span>Direct Route</span>
+                        <span class="price-badge">~ $${(distanceKm * 0.1).toFixed(0)} Gas</span>
+                    </div>
+                    <div class="results-detail"><strong>From:</strong> ${from}</div>
+                    <div class="results-detail"><strong>To:</strong> ${to}</div>
+                    <div class="results-detail" style="margin-top: 12px; font-size: 1rem;">
+                        <strong>Distance:</strong> ${distanceKm} km
+                    </div>
+                    <div class="results-detail">
+                        <strong>Est. Driving Time:</strong> ${estHours} hours
+                    </div>
+                </div>
+            `;
+        }
+
+
+        /**
+         * MOCK AMADEUS API - FLIGHTS
+         * In a real app, you would implement a backend endpoint to hide your API secret.
+         * Example real endpoint: `https://test.api.amadeus.com/v2/shopping/flight-offers`
+         * Required parameters usually include originLocationCode (IATA), destinationLocationCode, departureDate.
+         */
+        async function fetchAndDisplayFlights(boarding, destination) {
+            // Mocking a network delay
+            await new Promise(r => setTimeout(r, 600));
+
+            const distanceKm = calculateLeafletDistance(boarding, destination);
+            const container = document.getElementById('flights-results');
+
+            // If locations are too close, flights might not make sense
+            if (distanceKm < 100) {
+                container.innerHTML = `<p class="text-secondary" style="color: var(--text-secondary);">Locations are too close for commercial flights.</p>`;
+                return;
+            }
+
+            // Draw curved dashed line for flight path using Turf.js
+            drawFlightPath(boarding, destination);
+
+            // Mock Data
+            const flightTime = (distanceKm / 800 + 1).toFixed(1); // ~800km/h + 1hr overhead
+            container.innerHTML = `
+                <div class="results-card">
+                    <div class="results-title">
+                        <span>SkyWings Airlines ✈️</span>
+                        <span class="price-badge">$${(distanceKm * 0.15 + 50).toFixed(0)}</span>
+                    </div>
+                    <div class="results-detail">Non-stop • Economy</div>
+                    <div class="results-detail"><strong>Duration:</strong> ${flightTime} hours</div>
+                    <div class="results-detail" style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 8px;">
+                        * This is mock data. Replace with real Amadeus API fetch.
+                    </div>
+                </div>
+                <div class="results-card">
+                    <div class="results-title">
+                        <span>Global Air ✈️</span>
+                        <span class="price-badge">$${(distanceKm * 0.12 + 40).toFixed(0)}</span>
+                    </div>
+                    <div class="results-detail">1 Stop • Economy</div>
+                    <div class="results-detail"><strong>Duration:</strong> ${(parseFloat(flightTime) + 2.5).toFixed(1)} hours</div>
+                </div>
+            `;
+        }
+
+        // Draw a curved line to represent flight path
+        function drawFlightPath(start, end) {
+            if(typeof turf === 'undefined') return; // Fallback if Turf fails to load
+            
+            const startPoint = [start.lon, start.lat];
+            const endPoint = [end.lon, end.lat];
+            
+            // Calculate a midpoint and offset it to create a curve
+            const midpoint = turf.midpoint(startPoint, endPoint);
+            const distance = turf.distance(startPoint, endPoint);
+            // Offset the midpoint perpendicularly (creates a curve)
+            const bearing = turf.bearing(startPoint, endPoint);
+            // Offset by distance / 4, at 90 degrees from the bearing
+            const offsetMidpoint = turf.destination(midpoint, distance / 4, bearing + 90);
+
+            // Create a Bezier spline through the points
+            const line = turf.lineString([startPoint, offsetMidpoint.geometry.coordinates, endPoint]);
+            const curved = turf.bezierSpline(line, {resolution: 100, sharpness: 0.5});
+
+            // Convert back to Leaflet format (Lat, Lng)
+            const leafletCoords = curved.geometry.coordinates.map(c => [c[1], c[0]]);
+
+            L.polyline(leafletCoords, {
+                color: '#8b5cf6', // Purple for flights
+                weight: 3,
+                dashArray: '10, 10',
+                opacity: 0.8
+            }).addTo(routeLayer);
+        }
+
+        /**
+         * MOCK NAVITIA API - TRAINS/TRANSIT
+         * Real endpoint example: `https://api.navitia.io/v1/coverage/default/journeys`
+         * Requires passing 'from' and 'to' coordinates formatted as "lon;lat", plus API key header.
+         */
+        async function fetchAndDisplayTrains(boarding, destination) {
+             // Mocking a network delay
+            await new Promise(r => setTimeout(r, 400));
+            
+            const distanceKm = calculateLeafletDistance(boarding, destination);
+            const container = document.getElementById('trains-results');
+
+            // Mock Data
+            const trainTime = (distanceKm / 120).toFixed(1); // High speed train ~120km/h average
+            container.innerHTML = `
+                <div class="results-card">
+                    <div class="results-title">
+                        <span>Express Rail 🚆</span>
+                        <span class="price-badge">$${(distanceKm * 0.08 + 15).toFixed(0)}</span>
+                    </div>
+                    <div class="results-detail">Direct • Standard Class</div>
+                    <div class="results-detail"><strong>Duration:</strong> ${trainTime} hours</div>
+                    <div class="results-detail"><strong>Next Departure:</strong> In 45 mins</div>
+                    <div class="results-detail" style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 8px;">
+                        * This is mock data. Replace with real Navitia API fetch.
+                    </div>
+                </div>
+            `;
+        }
+
+    </script>
+</body>
+</html>
