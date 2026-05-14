@@ -5,6 +5,17 @@ import { authMiddleware } from '../middleware/auth';
 
 const router = express.Router();
 
+// Helper to emit to trip room
+async function emitToTrip(req: any, stopId: string, event: string, payload: any) {
+  const io = req.app.get('io');
+  if (io) {
+    const stop = await Stop.findById(stopId);
+    if (stop) {
+      io.to(`trip_${stop.tripId}`).emit(event, payload);
+    }
+  }
+}
+
 // GET /api/stops/:stopId/activities
 router.get('/:stopId/activities', authMiddleware, async (req, res) => {
   try {
@@ -28,6 +39,9 @@ router.post('/:stopId/activities', authMiddleware, async (req, res) => {
       orderIndex: count
     });
     await activity.save();
+    
+    await emitToTrip(req, req.params.stopId as string, 'activity_updated', { action: 'add', stopId: req.params.stopId as string, activity });
+    
     res.status(201).json(activity);
   } catch (error) {
     res.status(500).json({ error: 'Failed to create activity' });
@@ -42,6 +56,15 @@ router.put('/activities/reorder', authMiddleware, async (req, res) => {
       Activity.findByIdAndUpdate(a.id, { orderIndex: a.orderIndex })
     );
     await Promise.all(updates);
+    
+    // We assume all reordered activities belong to same stop for simplicity
+    if (activities.length > 0) {
+      const act = await Activity.findById(activities[0].id);
+      if (act) {
+        await emitToTrip(req, act.stopId.toString(), 'activity_updated', { action: 'reorder', stopId: act.stopId.toString() });
+      }
+    }
+    
     res.json({ message: 'Reordered successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Reorder failed' });
@@ -52,6 +75,9 @@ router.put('/activities/reorder', authMiddleware, async (req, res) => {
 router.put('/activities/:id', authMiddleware, async (req, res) => {
   try {
     const activity = await Activity.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (activity) {
+      await emitToTrip(req, activity.stopId.toString(), 'activity_updated', { action: 'update', stopId: activity.stopId.toString(), activity });
+    }
     res.json(activity);
   } catch (error) {
     res.status(500).json({ error: 'Update failed' });
@@ -61,7 +87,10 @@ router.put('/activities/:id', authMiddleware, async (req, res) => {
 // DELETE /api/stops/activities/:id
 router.delete('/activities/:id', authMiddleware, async (req, res) => {
   try {
-    await Activity.findByIdAndDelete(req.params.id);
+    const activity = await Activity.findByIdAndDelete(req.params.id);
+    if (activity) {
+      await emitToTrip(req, activity.stopId.toString(), 'activity_updated', { action: 'delete', stopId: activity.stopId.toString(), activityId: req.params.id });
+    }
     res.json({ message: 'Activity deleted' });
   } catch (error) {
     res.status(500).json({ error: 'Delete failed' });

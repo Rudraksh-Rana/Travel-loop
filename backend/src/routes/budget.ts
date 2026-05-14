@@ -19,6 +19,13 @@ router.post('/', authMiddleware, async (req, res) => {
   try {
     const item = new BudgetItem(req.body);
     await item.save();
+    
+    // Emit event to all clients in the trip room
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`trip_${item.tripId}`).emit('budget_updated', { action: 'add', item });
+    }
+    
     res.status(201).json(item);
   } catch (error) {
     res.status(500).json({ error: 'Failed to create budget item' });
@@ -28,7 +35,14 @@ router.post('/', authMiddleware, async (req, res) => {
 // DELETE /api/budget/:id
 router.delete('/:id', authMiddleware, async (req, res) => {
   try {
-    await BudgetItem.findByIdAndDelete(req.params.id);
+    const item = await BudgetItem.findByIdAndDelete(req.params.id);
+    if (item) {
+      // Emit event to all clients in the trip room
+      const io = req.app.get('io');
+      if (io) {
+        io.to(`trip_${item.tripId}`).emit('budget_updated', { action: 'delete', itemId: req.params.id });
+      }
+    }
     res.json({ message: 'Budget item deleted' });
   } catch (error) {
     res.status(500).json({ error: 'Delete failed' });

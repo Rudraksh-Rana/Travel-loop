@@ -3,14 +3,15 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { tripsApi, activitiesApi } from '@/lib/api';
+import { getSocket } from '@/lib/socket';
 import PageWrapper from '@/components/PageWrapper';
-import { 
-  Calendar, MapPin, PlusCircle, Trash2, 
+import { Calendar, MapPin, PlusCircle, Trash2, 
   ArrowLeft, Clock, GripVertical, Info, 
   Clock3, Trash, Sparkles, Navigation, Share2
 } from 'lucide-react';
 import Link from 'next/link';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import { motion, useScroll, useTransform } from 'framer-motion';
 
 export default function ItineraryPage() {
   const { id } = useParams();
@@ -20,12 +21,54 @@ export default function ItineraryPage() {
   const [showAddActivity, setShowAddActivity] = useState(false);
   const [newActivity, setNewActivity] = useState({ title: '', type: 'Sightseeing', duration: '60', cost: '0' });
 
+  const { scrollY } = useScroll();
+  const y1 = useTransform(scrollY, [0, 1000], [0, 200]);
+
   useEffect(() => {
     if (id) {
       tripsApi.get(id as string)
         .then(setData)
         .catch(console.error)
         .finally(() => setLoading(false));
+
+      const socket = getSocket();
+      socket.emit('join_trip', id);
+
+      socket.on('activity_updated', (payload) => {
+        setData(prevData => {
+          if (!prevData) return prevData;
+          
+          const newStops = [...prevData.stops];
+          const stopIndex = newStops.findIndex(s => s._id === payload.stopId);
+          if (stopIndex === -1) return prevData;
+
+          const stop = newStops[stopIndex];
+          const activities = [...(stop.activities || [])];
+
+          if (payload.action === 'add') {
+            if (!activities.find(a => a._id === payload.activity._id)) {
+              activities.push(payload.activity);
+            }
+          } else if (payload.action === 'update') {
+            const actIdx = activities.findIndex(a => a._id === payload.activity._id);
+            if (actIdx !== -1) activities[actIdx] = payload.activity;
+          } else if (payload.action === 'delete') {
+            const actIdx = activities.findIndex(a => a._id === payload.activityId);
+            if (actIdx !== -1) activities.splice(actIdx, 1);
+          } else if (payload.action === 'reorder') {
+            tripsApi.get(id as string).then(res => setData(res));
+            return prevData;
+          }
+
+          newStops[stopIndex] = { ...stop, activities };
+          return { ...prevData, stops: newStops };
+        });
+      });
+
+      return () => {
+        socket.emit('leave_trip', id);
+        socket.off('activity_updated');
+      };
     }
   }, [id]);
 
@@ -77,10 +120,42 @@ export default function ItineraryPage() {
 
   if (loading) return (
     <PageWrapper>
-      <div className="absolute inset-0 bg-black/90 pointer-events-none" />
-      <div className="animate-pulse space-y-12 max-w-[1200px] mx-auto pt-20">
-        <div className="h-20 bg-white/5 rounded-[40px] w-full" />
-        <div className="h-[500px] bg-white/5 rounded-[48px] w-full" />
+      <div className="absolute inset-0 bg-[#0a0a0a] z-[9999] flex flex-col items-center justify-center">
+        <motion.div 
+          className="relative w-32 h-32 mb-8"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1 }}
+        >
+          {/* Abstract Heritage Architecture / Journey Loop SVG */}
+          <svg viewBox="0 0 100 100" className="w-full h-full text-primary" fill="none" stroke="currentColor" strokeWidth="1">
+            <motion.path 
+              d="M50 10 C 20 10, 10 40, 50 90 C 90 40, 80 10, 50 10 Z M50 25 C 35 25, 30 45, 50 75 C 70 45, 65 25, 50 25 Z"
+              initial={{ pathLength: 0, strokeDashoffset: 1 }}
+              animate={{ pathLength: 1, strokeDashoffset: 0 }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", repeatType: "reverse" }}
+            />
+            <motion.circle 
+              cx="50" cy="50" r="4" fill="currentColor"
+              animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+          </svg>
+          <div className="absolute inset-0 bg-primary/20 blur-[30px] rounded-full animate-pulse" />
+        </motion.div>
+        <motion.div 
+          className="flex flex-col items-center"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, duration: 1 }}
+        >
+          <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.4em] text-white/50 mb-2">
+            <span className="w-8 h-[1px] bg-white/20" />
+            Initializing Grid
+            <span className="w-8 h-[1px] bg-white/20" />
+          </div>
+          <h2 className="font-display text-4xl text-white italic">Mapping Coordinates...</h2>
+        </motion.div>
       </div>
     </PageWrapper>
   );
@@ -93,9 +168,12 @@ export default function ItineraryPage() {
     <PageWrapper>
       {/* Cinematic Background */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none rounded-tl-[40px]">
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-[0.85] scale-105"
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1590050752117-238cb0fb12b1?q=80&w=2000')" }}
+        <motion.div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-[0.85] scale-110"
+          style={{ 
+            backgroundImage: "url('https://images.unsplash.com/photo-1590050752117-238cb0fb12b1?q=80&w=2000')",
+            y: y1 
+          }}
         />
         <div className="absolute inset-0 bg-gradient-to-br from-black/95 via-black/40 to-black/90" />
       </div>
@@ -154,10 +232,20 @@ export default function ItineraryPage() {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start relative">
           
           {/* Main List */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-2 space-y-8 relative flex">
+            {/* Vertical Typography Label */}
+            <div className="hidden lg:flex w-16 shrink-0 relative">
+              <div className="sticky top-40 h-max">
+                <span className="text-[8rem] font-display text-white/5 leading-none tracking-tighter" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                  DAY {String(activeStopIndex + 1).padStart(2, '0')}
+                </span>
+              </div>
+            </div>
+            
+            <div className="flex-1 space-y-8">
             {showAddActivity && (
               <form onSubmit={handleAddActivity} className="bg-white/5 backdrop-blur-3xl border border-primary/30 rounded-[40px] p-10 shadow-2xl animate-fadeIn relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 blur-[100px] -mr-32 -mt-32" />
@@ -258,6 +346,7 @@ export default function ItineraryPage() {
                 )}
               </Droppable>
             </DragDropContext>
+            </div>
           </div>
 
           {/* Logistics Sidebar */}
@@ -275,7 +364,10 @@ export default function ItineraryPage() {
               <Info className="absolute -right-4 -bottom-4 w-32 h-32 text-white/10 group-hover:rotate-12 transition-transform duration-700" />
               <div className="relative z-10 space-y-4">
                 <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">Logistics Pro-Tip</h4>
-                <p className="text-white font-light leading-relaxed italic">"Optimal heritage routes in {currentStop?.cityName} are best explored between 07:00 and 11:00 to avoid high-intensity thermal cycles."</p>
+                <div className="text-white font-light leading-relaxed italic">
+                  <span className="float-left text-7xl leading-[0.8] mt-2 mr-3 font-display text-white/80 italic">O</span>
+                  <p>ptimal heritage routes in {currentStop?.cityName} are best explored between 07:00 and 11:00 to avoid high-intensity thermal cycles.</p>
+                </div>
               </div>
             </div>
           </div>

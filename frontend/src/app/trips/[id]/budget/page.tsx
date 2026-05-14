@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { budgetApi } from '@/lib/api';
+import { getSocket } from '@/lib/socket';
 import PageWrapper from '@/components/PageWrapper';
 import { 
   PlusCircle, Trash2, ArrowLeft, Receipt, 
@@ -31,6 +32,27 @@ export default function TripBudgetPage() {
   useEffect(() => {
     if (id) {
       budgetApi.list(id as string).then(setItems).catch(console.error).finally(() => setLoading(false));
+
+      // Socket.IO Setup for Real-time Updates
+      const socket = getSocket();
+      socket.emit('join_trip', id);
+
+      socket.on('budget_updated', (data) => {
+        if (data.action === 'add') {
+          setItems(prev => {
+            // Prevent duplicates if we were the ones who added it
+            if (prev.find(item => item._id === data.item._id)) return prev;
+            return [...prev, data.item];
+          });
+        } else if (data.action === 'delete') {
+          setItems(prev => prev.filter(i => i._id !== data.itemId));
+        }
+      });
+
+      return () => {
+        socket.emit('leave_trip', id);
+        socket.off('budget_updated');
+      };
     }
   }, [id]);
 

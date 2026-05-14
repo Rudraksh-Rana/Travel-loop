@@ -21,10 +21,10 @@ function ChangeView({ coords }: { coords: [number, number][] }) {
   const map = useMap();
   useEffect(() => {
     if (coords.length === 1) {
-      map.setView(coords[0], 8);
+      map.flyTo(coords[0], 8, { duration: 2.5, easeLinearity: 0.1 });
     } else if (coords.length > 1) {
       const bounds = L.latLngBounds(coords);
-      map.fitBounds(bounds, { padding: [50, 50] });
+      map.flyToBounds(bounds, { padding: [50, 50], duration: 2.5, easeLinearity: 0.1 });
     }
   }, [coords, map]);
   return null;

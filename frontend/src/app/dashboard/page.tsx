@@ -13,6 +13,7 @@ import {
 import Link from 'next/link';
 import AuthGuard from '@/components/AuthGuard';
 import SafeImage from '@/components/SafeImage';
+import { motion, useScroll, useTransform } from 'framer-motion';
 
 /* Animated number counter hook */
 function useCountUp(target: number, duration = 1200) {
@@ -39,6 +40,9 @@ export default function DashboardPage() {
   const [notes, setNotes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const { scrollY } = useScroll();
+  const bgY = useTransform(scrollY, [0, 1000], [0, 250]);
+
   useEffect(() => {
     if (!user) return;
     
@@ -61,9 +65,12 @@ export default function DashboardPage() {
       <PageWrapper>
         {/* Cinematic Background */}
         <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none rounded-tl-[40px]">
-          <div 
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-[0.8] animate-slowZoom"
-            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1488646953014-85cb44e25828?q=80&w=2000')" }}
+          <motion.div 
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-[0.8] scale-110"
+            style={{ 
+              backgroundImage: "url('https://images.unsplash.com/photo-1488646953014-85cb44e25828?q=80&w=2000')",
+              y: bgY
+            }}
           />
           <div className="absolute inset-0 overlay-dark" />
           <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-primary/10 rounded-full blur-[120px] animate-floatY" />
@@ -71,26 +78,32 @@ export default function DashboardPage() {
 
         <div className="relative z-10 text-white min-h-screen pt-4 pb-20 animate-fadeIn px-4 md:px-8 lg:px-0">
           
-          {/* Header Section - Inspired by Pipe's minimalist clarity */}
-          <header className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8 pt-8">
-            <div className="space-y-4">
+          {/* Header Section - Inspired by Luxury Editorial */}
+          <motion.header 
+            className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8 pt-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1 }}
+          >
+            <div className="space-y-4 max-w-2xl">
               <div className="flex items-center gap-3 text-primary uppercase tracking-[0.4em] text-[10px] font-black">
                 <div className="w-8 h-[2px] bg-primary" />
-                Registry Status: Active
+                Heritage Grid System
               </div>
-              <h1 className="font-display text-6xl md:text-8xl text-white tracking-tighter leading-[0.8] text-shadow">
-                Namaste, <span className="text-primary italic">{user?.name?.split(' ')[0] || 'Traveler'}</span>
+              <h1 className="font-display text-6xl md:text-8xl text-white tracking-tighter leading-[0.9] text-shadow flex items-baseline">
+                <span className="text-9xl md:text-[10rem] leading-[0.5] text-white/90 italic mr-2 -ml-2">N</span>
+                amaste, <span className="text-primary italic ml-4">{user?.name?.split(' ')[0] || 'Traveler'}</span>
               </h1>
-              <p className="text-white/40 mt-6 text-xl font-light max-w-xl leading-relaxed italic">
-                The chronicle continues. Your bento planning deck is synchronized.
+              <p className="text-white/50 mt-8 text-xl font-light leading-relaxed italic pl-2 border-l-2 border-primary/30">
+                The chronicle continues. Your luxurious bento deck is synchronized and ready for the next expedition.
               </p>
             </div>
             
-            <Link href="/trips/new" className="btn-terracotta flex items-center gap-4 group px-10 py-6 shadow-2xl shadow-terracotta/20 animate-pulseGlowTerra">
+            <Link href="/trips/new" className="btn-terracotta flex items-center gap-4 group px-10 py-6 shadow-2xl shadow-terracotta/20 animate-pulseGlowTerra hover:scale-105 transition-all">
               <PlusCircle className="w-5 h-5 group-hover:rotate-90 transition-transform duration-500" /> 
               New Expedition
             </Link>
-          </header>
+          </motion.header>
 
           {/* Bento Grid Container */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-10 pb-20">
@@ -137,8 +150,9 @@ export default function DashboardPage() {
             </div>
 
             {/* 3. Expedition Registry (Bento Medium-Wide) */}
-            <section className="lg:col-span-7 bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[56px] p-12 relative overflow-hidden group">
-               <div className="flex items-center justify-between mb-12">
+            <section className="lg:col-span-7 bg-white/[0.02] backdrop-blur-3xl border border-white/5 rounded-[56px] p-12 relative overflow-hidden group shadow-[inset_0_0_100px_rgba(255,255,255,0.02)]">
+               <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-[100px] -mr-32 -mt-32 transition-transform duration-1000 group-hover:scale-150" />
+               <div className="flex items-center justify-between mb-12 relative z-10">
                   <h2 className="font-display text-4xl text-white italic">Registry</h2>
                   <Link href="/trips" className="text-white/30 hover:text-white text-[10px] uppercase tracking-[0.3em] font-black flex items-center gap-3 transition-all">
                     All Trips <ArrowRight className="w-4 h-4" />
@@ -146,22 +160,24 @@ export default function DashboardPage() {
                 </div>
 
                 {trips.length === 0 ? (
-                  <div className="py-12 text-center">
+                  <div className="py-12 text-center relative z-10">
                     <Compass className="w-12 h-12 text-white/10 mx-auto mb-4 animate-floatY" />
                     <p className="text-white/20 text-sm">No active expeditions found.</p>
                   </div>
                 ) : (
-                  <div className="space-y-6">
+                  <div className="space-y-6 relative z-10">
                     {trips.slice(0, 2).map((trip) => (
-                      <Link href={`/trips/${trip._id}`} key={trip._id} className="flex items-center gap-6 p-6 bg-white/[0.05] rounded-3xl border border-white/5 hover:border-primary/30 hover:bg-white/[0.08] transition-all group/item">
-                        <div className="w-20 h-20 rounded-2xl overflow-hidden relative shrink-0">
-                          <SafeImage src={trip.coverPhotoUrl || ''} category="hero" alt="" fill className="object-cover" />
+                      <Link href={`/trips/${trip._id}`} key={trip._id} className="flex items-center gap-6 p-6 bg-gradient-to-r from-white/[0.05] to-transparent rounded-[32px] border border-white/5 hover:border-primary/20 transition-all group/item hover:pl-8">
+                        <div className="w-20 h-20 rounded-2xl overflow-hidden relative shrink-0 shadow-2xl group-hover/item:shadow-primary/20">
+                          <SafeImage src={trip.coverPhotoUrl || ''} category="hero" alt="" fill className="object-cover group-hover/item:scale-110 transition-transform duration-[2000ms]" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="text-white font-display text-xl mb-1 truncate">{trip.title}</h4>
+                          <h4 className="text-white font-display text-xl mb-1 truncate group-hover/item:text-primary transition-colors">{trip.title}</h4>
                           <p className="text-white/30 text-[10px] uppercase font-black tracking-widest">{trip.stops?.length || 0} Map Points</p>
                         </div>
-                        <ChevronRight className="w-5 h-5 text-white/20 group-hover/item:text-primary group-hover/item:translate-x-2 transition-all" />
+                        <div className="w-12 h-12 rounded-full border border-white/5 flex items-center justify-center bg-white/[0.02] group-hover/item:bg-primary group-hover/item:border-primary transition-all">
+                          <ChevronRight className="w-5 h-5 text-white/20 group-hover/item:text-white transition-all" />
+                        </div>
                       </Link>
                     ))}
                   </div>

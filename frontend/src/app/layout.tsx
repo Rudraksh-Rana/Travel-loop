@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 import AIConcierge from '@/components/AIConcierge';
+import CustomCursor from '@/components/CustomCursor';
+import OverlayGrain from '@/components/OverlayGrain';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -18,6 +20,7 @@ export const metadata: Metadata = {
   description: 'Plan. Explore. Loop. — A high-fidelity, cinematic window to India\'s most extraordinary heritage destinations and curated experiences.',
   keywords: ['Travel India', 'Heritage Tourism', 'Luxury Travel', 'Itinerary Planner', 'Indian Culture'],
   authors: [{ name: 'Traveloop Team' }],
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({
@@ -47,7 +50,9 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body suppressHydrationWarning className="bg-bg text-text font-body antialiased selection:bg-primary selection:text-white">
+      <body suppressHydrationWarning className="bg-bg text-text font-body antialiased selection:bg-primary selection:text-white relative">
+        <OverlayGrain />
+        <CustomCursor />
         <AuthProvider>
           {children}
           <AIConcierge />

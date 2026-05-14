@@ -1,5 +1,13 @@
 import type { NextConfig } from "next";
 
+// We use require since next-pwa doesn't have a default export type that plays nicely with next.config.ts
+const withPWA = require('next-pwa')({
+  dest: 'public',
+  register: true,
+  skipWaiting: true,
+  disable: process.env.NODE_ENV === 'development',
+});
+
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
@@ -17,6 +25,7 @@ const nextConfig: NextConfig = {
       }
     ],
   },
+  turbopack: {},
 };
 
-export default nextConfig;
+export default withPWA(nextConfig);

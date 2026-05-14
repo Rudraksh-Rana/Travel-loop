@@ -61,4 +61,46 @@ router.get('/activities', async (req, res) => {
   }
 });
 
+// Live Flights Hook (e.g., Amadeus / Skyscanner Bridge)
+router.get('/flights', async (req, res) => {
+  try {
+    const { origin, destination, date } = req.query;
+    
+    // In a production environment, this is where you would call:
+    // const amadeusRes = await axios.get(`https://test.api.amadeus.com/v2/shopping/flight-offers?...`)
+    // For now, we simulate a Live API response based on the search
+    
+    if (!origin || !destination || !date) {
+      return res.status(400).json({ error: 'Origin, destination, and date are required.' });
+    }
+
+    const mockFlights = [
+      {
+        id: 'FL-001',
+        airline: 'Air India',
+        flightNumber: 'AI 101',
+        departureTime: '06:30 AM',
+        arrivalTime: '08:45 AM',
+        duration: '2h 15m',
+        price: Math.floor(Math.random() * 5000) + 3000, // Dynamic pricing simulation
+        status: 'On Time'
+      },
+      {
+        id: 'FL-002',
+        airline: 'IndiGo',
+        flightNumber: '6E 404',
+        departureTime: '11:00 AM',
+        arrivalTime: '01:05 PM',
+        duration: '2h 05m',
+        price: Math.floor(Math.random() * 5000) + 2500,
+        status: 'Delayed'
+      }
+    ];
+
+    res.json(mockFlights);
+  } catch (error) {
+    res.status(500).json({ error: 'Flight API currently unavailable' });
+  }
+});
+
 export default router;
